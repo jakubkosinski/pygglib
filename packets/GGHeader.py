@@ -15,7 +15,7 @@ class GGHeader(object):
 	def __init__(self, type_, length, connection = None):
 		assert type(type_) == types.IntType
 		assert type(length) == types.IntType
-		assert connection == None || type(connection) == type(Connection)
+		assert connection == None || type(connection) == Connection
 		
 		self.type = type_
 		self.length = length

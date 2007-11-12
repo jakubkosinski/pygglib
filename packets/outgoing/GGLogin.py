@@ -37,7 +37,7 @@ class GGLogin(GGOutgoingPacket):
 		self.description = description
 	
 	def send(self, connection):
-		assert type(connection) == type(Connection())
+		assert type(connection) == Connection
 
 		connection.send_header(GGOutgoingPacketTypes["Login60"], ____)
 		connection.send_int32(self.uin)
