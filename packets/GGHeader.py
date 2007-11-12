@@ -1,11 +1,9 @@
-"""
-(c) Marek Chrusciel
-    Jakub Kosinski, 
-    Marcin Krupowicz, 
-    Mateusz Strycharski
-"""
-
-""" $Id$ """
+#(C) Marek Chrusciel, 
+#    Jakub Kosinski, 
+#    Marcin Krupowicz,
+#    Mateusz Strycharski
+#
+# $Id$
 
 import types
 

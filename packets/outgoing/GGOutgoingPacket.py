@@ -1,15 +1,13 @@
-"""
-(C) Marek Chrusciel, 
-    Jakub Kosinski, 
-    Marcin Krupowicz,
-    Marek Chrusciel
-"""
-
-""" $Id$ """
+#(C) Marek Chrusciel, 
+#    Jakub Kosinski, 
+#    Marcin Krupowicz,
+#    Mateusz Strycharski
+#
+# $Id$
 
 class GGIncomingPacket(object):
 	"""
-	"Abstrakcyjna" klasa pakietow wysylany do serwera
+	"Abstrakcyjna" klasa pakietow wysylanych do serwera
 	"""
 	def send(self):
 		pass
