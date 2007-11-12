@@ -10,6 +10,6 @@ Autorzy:
 	Mateusz Strycharski
 """
 
-""" $Id: pygglib.py 1 2007-11-11 23:08:39Z cinu $ """
+""" $Id$ """
 
 

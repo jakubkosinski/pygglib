@@ -5,7 +5,7 @@
     Mateusz Strycharski
 """
 
-""" $Id: GGLogin.py 2 2007-11-11 23:13:43Z cinu $ """
+""" $Id$ """
 
 import types
 import GGOutgoingPacket

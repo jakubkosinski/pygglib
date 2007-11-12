@@ -5,7 +5,7 @@
     Mateusz Strycharski
 """
 
-""" $Id: Helpers.py 1 2007-11-11 23:08:39Z cinu $ """
+""" $Id$ """
 
 import types
 
