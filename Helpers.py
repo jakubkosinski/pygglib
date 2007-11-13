@@ -6,6 +6,7 @@
 # $Id$
 
 import types
+import socket
 
 class Helpers(object):
 	hash_type = 0x01 # -- hash obliczany za pomoca "zwyklej", "starej" funkcji do obliczania gg_hashu
@@ -39,8 +40,15 @@ class Helpers(object):
 			y &= 0xffffff00L
 		return y
 
-	def ip_string_to_int32(ip):
-		#assert type(ip) == types.StringType
-		return NotImplemented
+	def host_to_int32(host):
+		assert type(host) == types.StringType
+		return socket.inet_aton(socket.gethostbyname(host))
+		
+	
+	def ip_to_int32(ip):
+		assert type(ip) == types.StringType
+		return socket.inet_aton(ip)
 	
 	gg_login_hash = staticmethod(gg_login_hash)
+	host_to_int32 = staticmethod(host_to_int32)
+	ip_to_int32 = staticmethod(ip_to_int32)
