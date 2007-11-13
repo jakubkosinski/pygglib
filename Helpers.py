@@ -13,7 +13,22 @@ class Helpers(object):
 	def gg_login_hash(password, seed):
 		#assert type(password) == types.StringType
 		#assert type(seed) == types.IntType
-		return NotImplemented
+		x = 0L
+		y = seed
+		z = 0L
+		for c in password:
+			x = (x and 0xffffff00) or c
+			y ^= x
+			y += x
+			x <<= 8
+			y ^= x
+			x <<= 8
+			y -= x
+			x <<= 8
+			y ^= x
+			z = y and 0x1f
+			y = (y << z) or (y >> (32 - z))
+		return y
 	def ip_string_to_int32(ip):
 		#assert type(ip) == types.StringType
 		return NotImplemented
