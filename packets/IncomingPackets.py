@@ -5,7 +5,13 @@
 #
 # $Id$
 
-import GGIncomingPacket
+class GGIncomingPacket(object):
+	"""
+	"Abstrakcyjna" klasa pakietow przychodzacych od serwera
+	"""
+	def read(self):
+		pass
+
 
 class GGWelcome(GGIncomingPacket):
 	"""
