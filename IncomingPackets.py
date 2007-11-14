@@ -5,6 +5,8 @@
 #
 # $Id$
 
+import struct
+
 class GGIncomingPacket(object):
 	"""
 	"Abstrakcyjna" klasa pakietow przychodzacych od serwera
@@ -22,5 +24,5 @@ class GGWelcome(GGIncomingPacket):
 		self.seed = None
 	
 	def read(self, connection):
-		self.seed = connection.read_int32()
+		self.seed = struct.unpack("<I", connection.read())[0]
 		

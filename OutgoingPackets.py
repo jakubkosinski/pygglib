@@ -8,9 +8,10 @@
 import types
 import sys
 import struct
-import GGHeader
-sys.path.append("../")
+from HeaderPacket import GGHeader
+from Networking import Connection
 import Helpers
+
 
 
 class GGOutgoingPacket(object):
@@ -34,8 +35,8 @@ class GGLogin(GGOutgoingPacket):
 		"""
 		assert type(uin) == types.IntType
 		assert type(password) == types.StringType
-		assert type(status) in GGStatus
-		assert type(seed) == types.IntType
+		#assert type(status) in GGStatus
+		#assert type(seed) == types.IntType or type(seed) == types.LongType
 		assert type(description) == types.StringType and len(description) <= 255
 		assert type(local_ip) == types.StringType
 		assert type(local_port) == types.IntType
@@ -60,13 +61,25 @@ class GGLogin(GGOutgoingPacket):
 	def send(self, connection):
 		assert type(connection) == Connection
 		
-		data = struct.pack("<IcIIIcIHIHBB%dsI" % len(self.description) + 1,
-			self.uin, 0x01, Helpers.gg_login_hash(self.password, self.seed), 
-			self.status, self.version, 0x00, Helpers.ip_to_int32(self.local_ip), local_port,
-			Helpers.ip_to_int32(self.external_ip), self.external_port,
-			self.image_size, 0xbe, self.description, self.time)
+		data = struct.pack("<IBIIIBIHIHBB%dsI" % (len(self.description) + 1),
+			self.uin, 
+			0x01, 
+			Helpers.gg_login_hash(self.password, self.seed), 
+			self.status, 
+			self.version, 
+			0x00, 
+			Helpers.ip_to_int32(self.local_ip), 
+			self.local_port, 
+			Helpers.ip_to_int32(self.external_ip), 
+			self.external_port, 
+			self.image_size, 
+			0xbe,
+			self.description,
+			self.time)
 
-		connection.send(GGHeader(GGOutgoingPacketTypes.LOGIN70, len(data)) + data)
+		#connection.send(GGHeader(GGOutgoingPacketTypes.LOGIN70, len(data)) + data)
+		connection.send(repr(GGHeader(0x019, len(data))) + data)
+		print 'wyslano'
 
 		
 

@@ -18,7 +18,7 @@ class Connection(object):
 	def send(self, data):
 		self.__socket.send(data)
 	
-	def recv(self, limit = 1024):
+	def read(self, limit = 1024):
 		return self.__socket.recv(limit)
 	
 	def disconnect(self):

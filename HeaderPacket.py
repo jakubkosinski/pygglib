@@ -7,6 +7,7 @@
 
 import types
 import struct
+from Networking import Connection
 
 class GGHeader(object):
 	"""
@@ -33,7 +34,7 @@ class GGHeader(object):
 	
 	def read(self, connection):
 		assert type(connection) == Connection
-		data = connection.read()
+		data = connection.read(8)
 		self.type, self.length = struct.unpack("<II", data)
 	
 	def __repr__(self):
