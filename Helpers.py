@@ -8,6 +8,7 @@
 import types
 import socket
 import struct
+import hashlib
 
 def gg_login_hash(password, seed):
 	assert type(password) == types.StringType
@@ -16,27 +17,30 @@ def gg_login_hash(password, seed):
 	y = long(seed)
 	z = 0L
 	for c in password:
-		x = (x & 0xffffff00L) | ord(c)
+		x = (x & 0xffffffffL) | ord(c)
 		y ^= x
-		y &= 0xffffff00L
+		y &= 0xffffffffL
 		y += x
-		y &= 0xffffff00L
+		y &= 0xffffffffL
 		x <<= 8
-		x &= 0xffffff00L
+		x &= 0xffffffffL
 		y ^= x
-		y &= 0xffffff00L
+		y &= 0xffffffffL
 		x <<= 8
-		x &= 0xffffff00L
+		x &= 0xffffffffL
 		y -= x
-		y &= 0xffffff00L
+		y &= 0xffffffffL
 		x <<= 8
-		x &= 0xffffff00L
+		x &= 0xffffffffL
 		y ^= x
-		y &= 0xffffff00L
+		y &= 0xffffffffL
 		z = y & 0x1f
 		y = (y << z) | (y >> (32 - z))
-		y &= 0xffffff00L
+		y &= 0xffffffffL
 	return y
+	#return struct.pack("<I60s", y, str(0x00))[0]
+	#return hashlib.sha1(password).digest()
+
 
 
 def ip_to_int32(ip):

@@ -24,5 +24,5 @@ class GGWelcome(GGIncomingPacket):
 		self.seed = None
 	
 	def read(self, connection):
-		self.seed = struct.unpack("<I", connection.read())[0]
+		self.seed = struct.unpack("<I", connection.read(4))[0]
 		
