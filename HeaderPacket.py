@@ -15,13 +15,13 @@ class GGHeader(object):
 	naglowek - tym naglowkiem jest wlasnie struktura GGHeader.
 	"""
 
-	def __init__(self):
-		"""
-		Konstruktor ten wywolujemy gdy naglowek bedziemy odbierac
-		"""
-		pass
+	#def __init__(self):
+	#	"""
+	#	Konstruktor ten wywolujemy gdy naglowek bedziemy odbierac
+	#	"""
+	#	pass
 	
-	def __init__(self, type_, length):
+	def __init__(self, type_=0, length=0):
 		"""
 		Konstruktor ten wywolujemy wtedy kiedy pakiet jest przeznaczony do wyslania
 		"""

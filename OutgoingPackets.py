@@ -86,7 +86,7 @@ class GGLogin(GGOutgoingPacket):
 			Helpers.ip_to_int32(self.local_ip), self.local_port, Helpers.ip_to_int32(self.external_ip), self.external_port,
 			self.image_size, 0xbe, self.description, self.time)
 
-		connection.send(struct.pack("<ii", 0x0015, len(data)) + data)
+		connection.send(repr(GGHeader(0x0015, len(data))) + data)
 
 class GGNewStatus(GGOutgoingPacket):
 	"""
@@ -110,5 +110,5 @@ class GGNewStatus(GGOutgoingPacket):
 		assert type(connection) == Connection
 		
 		data = struct.pack("<I%dsI" % (len(self.description) + 1), self.status, self.description, self.time)
-		connection.send(struct.pack("<II", 0x0002, len(data)) + data)
+		connection.send(repr(GGHeader(0x0002, len(data))) + data)
 		
