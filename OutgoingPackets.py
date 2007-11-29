@@ -112,3 +112,30 @@ class GGNewStatus(GGOutgoingPacket):
 		data = struct.pack("<I%dsI" % (len(self.description) + 1), self.status, self.description, self.time)
 		connection.send(repr(GGHeader(0x0002, len(data))) + data)
 		
+class GGSendMsg(GGOutgoingPacket):
+	"""
+	Pakiet wysylamy do serwera, zeby wyslac wiadomosc
+	"""
+	def __init__(self, rcpt, msg, seq = 0, msg_class = 0x0004):
+		"""
+		rcpt - numer odbiorcy
+		seq - numer serwencyjny wiadomosci
+		msg_class - klasa wiadomosci
+		msg - wiadomosc
+		"""
+		assert type(rcpt) == types.IntType
+		assert type(seq) == types.IntType
+		assert type(msg_class) == types.IntType
+		assert type(msg) == types.StringType
+		
+		self.rcpt = rcpt
+		self.seq = seq
+		self.msg_class = msg_class
+		self.msg = msg
+		
+	def send(self, connection):
+		assert type(connection) == Connection
+		
+		data = struct.pack("<III%ds" % (len(self.msg) + 1), self.rcpt, self.seq, self.msg_class, self.msg)
+		connection.send(repr(GGHeader(0x000b, len(data))) + data)
+		

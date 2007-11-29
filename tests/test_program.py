@@ -38,4 +38,8 @@ if __name__ == "__main__":
 		packet = GGRecvMsg()
 		packet.read(conn, header.length)
 		print "New message received:\n\tsender: %d\n\tmessage: %s" % (packet.sender, packet.message)
+	sender = packet.sender
+	message = packet.message
+	packet = GGSendMsg(sender, message)
+	packet.send(conn)
 	print conn.read(1) #delay
