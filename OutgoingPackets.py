@@ -88,5 +88,27 @@ class GGLogin(GGOutgoingPacket):
 
 		connection.send(struct.pack("<ii", 0x0015, len(data)) + data)
 
+class GGNewStatus(GGOutgoingPacket):
+	"""
+	Pakiet ten wysylamy do serwera, zeby zmienic status
+	"""
+	def __init__(self, status, description = '', time = 0):
+		"""
+		status - status (GGStatus)
+		description - opis statusu (string)
+		time - czas w sekundach od 1.01.1970
+		"""
+		assert type(status) == types.IntType
+		assert type(description) == types.StringType and len(description) <= 255
+		assert type(time) == types.IntType or type(time) == types.LongTime
 		
+		self.status = status
+		self.description = description
+		self.time = time
 
+	def send(self, connection):
+		assert type(connection) == Connection
+		
+		data = struct.pack("<I%sI" % (len(self.description) + 1), self.status, self.description, self.time)
+		connection.send(struct.pack("<II", 0x0002, len(data)) + data)
+		
