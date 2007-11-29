@@ -11,8 +11,23 @@ import struct
 from HeaderPacket import GGHeader
 from Networking import Connection
 import Helpers
+from Helpers import Enum
 
-
+GGOutgoingPackets = Enum({
+	"GGNewStatus":0x0002, #Zmiana statusu
+	"GGPing":0x0008, #Ping
+	"GGSendMsg":0x000b, #Wyslanie wiadomosci
+	"GGLogin":0x000c, #Logowanie sie przed GG 6.0
+	"GGAddNotify":0x000d, #Dodanie do listy kontaktow
+	"GGRemoveNotify":0x000e, #Usuniecie z listy kontaktow
+	"GGNotifyFirst":0x000f, #Poczatkowy fragment listy kontaktow wiekszej niz 400 wpisow
+	"GGNotifyLast":0x00010, #Ostatni fragment listy kontaktow
+	"GGLoginExt":0x0013, #Logowanie przed GG 6.0
+	"GGPubDir50Request":0x0014, #Zapytanie katalogu publicznego
+	"GGLogin60":0x0015, #Logowanie
+	"GGUserlistRequest":0x0016, #Zapytanie listy kontaktow na serwerze
+	"GGLogin70":0x0019 #Logowanie
+	})
 
 class GGOutgoingPacket(object):
 	"""
@@ -79,14 +94,14 @@ class GGLogin(GGOutgoingPacket):
 			self.description,
 			self.time)
 
-		#connection.send(repr(GGHeader(0x019, len(data))) + data)
+		#connection.send(repr(GGHeader(GGOutgoingPackets.GGLogin, len(data))) + data)
 		"""
 		data = struct.pack("<IIIIBIhIhBB%dsI" % (len(self.description) + 1),
 			self.uin, Helpers.gg_login_hash(self.password, self.seed), self.status, self.version, 0x00,
 			Helpers.ip_to_int32(self.local_ip), self.local_port, Helpers.ip_to_int32(self.external_ip), self.external_port,
 			self.image_size, 0xbe, self.description, self.time)
 
-		connection.send(repr(GGHeader(0x0015, len(data))) + data)
+		connection.send(repr(GGHeader(GGOutgoingPackets.GGLogin60, len(data))) + data)
 
 class GGNewStatus(GGOutgoingPacket):
 	"""
@@ -110,7 +125,7 @@ class GGNewStatus(GGOutgoingPacket):
 		assert type(connection) == Connection
 		
 		data = struct.pack("<I%dsI" % (len(self.description) + 1), self.status, self.description, self.time)
-		connection.send(repr(GGHeader(0x0002, len(data))) + data)
+		connection.send(repr(GGHeader(GGOutgoingPackets.GGNewStatus, len(data))) + data)
 		
 class GGSendMsg(GGOutgoingPacket):
 	"""
@@ -137,5 +152,5 @@ class GGSendMsg(GGOutgoingPacket):
 		assert type(connection) == Connection
 		
 		data = struct.pack("<III%ds" % (len(self.msg) + 1), self.rcpt, self.seq, self.msg_class, self.msg)
-		connection.send(repr(GGHeader(0x000b, len(data))) + data)
+		connection.send(repr(GGHeader(GGOutgoingPackets.GGSendMsg, len(data))) + data)
 		
