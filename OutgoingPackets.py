@@ -109,6 +109,6 @@ class GGNewStatus(GGOutgoingPacket):
 	def send(self, connection):
 		assert type(connection) == Connection
 		
-		data = struct.pack("<I%sI" % (len(self.description) + 1), self.status, self.description, self.time)
+		data = struct.pack("<I%dsI" % (len(self.description) + 1), self.status, self.description, self.time)
 		connection.send(struct.pack("<II", 0x0002, len(data)) + data)
 		
