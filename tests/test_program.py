@@ -20,7 +20,7 @@ if __name__ == "__main__":
 	packet.read(conn)
 	seed = packet.seed
 	# mamy juz seeda
-	packet = GGLogin(11327271, "eto2007", 0x0002, seed, "opis :)")
+	packet = GGLogin(11327271, "eto2007", 0x0004, seed, "opis :)")
 	packet.send(conn)
 	header.read(conn)
 	print "Got Packet:\n \ttype: %d\n\tlength: %d" % (header.type, header.length)
@@ -28,10 +28,14 @@ if __name__ == "__main__":
 		print 'Logged in'
 	if header.length > 0:
 		conn.read(header.length) # jeszcze jakies COS przychodzi po zalogowaniu sie
-	packet  = GGNewStatus(0x0002, "pygglib w akcji")
+	packet  = GGNewStatus(0x0004, "pygglib w akcji")
 	packet.send(conn)
 	print 'Status changed'
 	# w takim razie jeszcze poczekajmy na jakis pakiecik...
 	header.read(conn)
 	print "Got Packet:\n \ttype: %d\n\tlength: %d" % (header.type, header.length)
-	print conn.read(header.length)
+	if header.type == 0x000a:
+		packet = GGRecvMsg()
+		packet.read(conn, header.length)
+		print "New message received:\n\tsender: %d\n\tmessage: %s" % (packet.sender, packet.message)
+	print conn.read(1) #delay
