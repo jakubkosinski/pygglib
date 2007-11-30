@@ -10,6 +10,19 @@ Autorzy:
 	Mateusz Strycharski
 """
 
-""" $Id$ """
+#$Id$
 
+from IncomingPackets import *
+from OutgoingPackets import *
+from HeaderPacket import GGHeader
+from Helpers import *
 
+class GGSession(EventsList):
+	def __init__(self, uin, password):
+		EventsList.__init__(self, ["on_msg_recv", "on_status_changed"])
+		self.__uin = uin
+		self.__password = password
+	
+	def login(self):
+		
+		login_packet = GGLogin(self.__uin, self.__password, 0x0002, )
