@@ -29,7 +29,7 @@ class GGSession(EventsList):
 		assert initial_status in GGStatuses
 		assert type(initial_description) == types.StringType and len(initial_description) <= 70
 		
-		EventsList.__init__(self, ["on_msg_recv", "on_status_changed", "on_login_ok", "on_login_failed", "on_need_email"])
+		EventsList.__init__(self, ['on_login_ok', 'on_login_failed', 'on_need_email'])
 		self.__uin = uin
 		self.__password = password
 		self.__status = initial_status

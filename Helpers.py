@@ -110,7 +110,7 @@ class EventsList(object):
 		if not self.__event_handlers.has_key(event_handler):
 			raise UnknowEventHandler
 		del self.__event_handlers[event_handler] # usuwamy handlera ze slownika odwrotnego
-		del self.__events[event][self.__events[event].index(event_handler)] # i usuwamy handlera z listy funkcji zdarzeia
+		del self.__events[event][self._events[event].index(event_handler)] # i usuwamy handlera z listy funkcji zdarzeia
 #
 # Oblsuga zdarzen
 #========================
