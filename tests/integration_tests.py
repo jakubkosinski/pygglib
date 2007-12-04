@@ -15,3 +15,5 @@ if __name__ == "__main__":
 	session = GGSession(uin = 11327271, password = 'eto2007')
 	session.register('on_login_ok', login_ok_event_handler)
 	session.login()
+	session.send_msg(3993939, 'eheheh ;)')
+	session.logout()

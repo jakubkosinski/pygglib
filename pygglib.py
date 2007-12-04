@@ -42,14 +42,19 @@ class GGSession(EventsList):
 		self.__external_port = 0
 		self.__image_size = 255
 		
+		self.__connected = False # czy jestesmy polaczeni z serwerem
 		self.__logged = False # czy uzytkownik jest zalogowany do serwera
 		
 		self.__connection = None
 		
 	
 	def login(self):
+		"""
+		Logowanie sie do sieci GG
+		"""
 		server, port = HTTPServices.get_server(self.__uin)
 		self.__connection = Connection(server, port)
+		self.__connected = True #TODO: sprawdzanie tego i timeouty
 		header = GGHeader()
 		header.read(self.__connection)
 		if header.type != GGIncomingPackets.GGWelcome:
@@ -74,7 +79,16 @@ class GGSession(EventsList):
 		else:
 			raise GGUnexceptedPacket((header.type, header.length))
 	
+	def logout(self, description = ''):
+		"""
+		Wylogowanie z sieci GG i (jesli niepusty) pozostawienie statusu na nieostepny z opisem 'description'
+		"""
+		assert type(description) == types.StringType and len(description) <= 70
 		
+		self.change_status(description == '' and GGStatuses.NotAvail or GGStatuses.NotAvailDescr, description)
+		self.__connection.disconnect()
+		self.__connected = False
+		self.__logged = False
 		
 	def change_status(self, status, description):
 		"""
@@ -90,4 +104,12 @@ class GGSession(EventsList):
 		out_packet.send(self.__connection)
 		self.__status = status
 		self.__description = description
+	
+	def send_msg(self, rcpt, msg, seq = 0, msg_class = 0x0004): #TODO: msg_class na enumy...
+		assert type(rcpt) == types.IntType
+		assert type(msg) == types.StringType and len(msg) < 2000 #TODO: w dalszych iteracjach: obsluga richtextmsg
+		assert type(seq) == types.IntType
+		assert type(msg_class) == types.IntType #TODO: and msg_class in GGMsgClasses
 		
+		out_packet = GGSendMsg(rcpt, msg, seq, msg_class)
+		out_packet.send(self.__connection)
