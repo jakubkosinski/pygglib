@@ -30,5 +30,6 @@ GGUserTypes = Enum({
 GGRemotePort = Enum({
 	"NotStraightConnection":0, #Klient nie obsluguje bezposredniego polaczenia
 	"BehindNAT":1, #Klient laczy sie zza NAT lub innej formy maskarady
-	"NotInContact":2, #Klient nie ma nas w swojej liscie kontaktow
+	"NotInBuddyList":2, #Klient nie ma nas w swojej liscie kontaktow
 	})
+	
