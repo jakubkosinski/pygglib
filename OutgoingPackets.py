@@ -140,7 +140,7 @@ class GGSendMsg(GGOutgoingPacket):
 		msg - wiadomosc
 		"""
 		assert type(rcpt) == types.IntType and rcpt > 0
-		assert type(seq) == types.IntType and seq > 0
+		assert type(seq) == types.IntType
 		assert type(msg_class) == types.IntType
 		assert type(msg) == types.StringType and len(msg) <= 2000
 		

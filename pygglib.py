@@ -19,6 +19,7 @@ from Helpers import *
 from GGConstans import *
 from Networking import Connection
 from Exceptions import *
+from HTTPServices import *
 import types
 
 
@@ -47,7 +48,8 @@ class GGSession(EventsList):
 		
 	
 	def login(self):
-		self.__connection = Connection("217.17.45.153", 8074) #TODO: zmienic to - HTTPServices
+		server, port = HTTPServices.get_server(self.__uin)
+		self.__connection = Connection(server, port)
 		header = GGHeader()
 		header.read(self.__connection)
 		if header.type != GGIncomingPackets.GGWelcome:
