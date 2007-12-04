@@ -6,8 +6,6 @@
 
 from Helpers import Enum
 
-GGStatuses
-
 GGStatuses = Enum({
 	"NotAvail":0x0001, #Niedostepny
 	"NotAvailDescr":0x0015, #Niedostepny (z opisem)

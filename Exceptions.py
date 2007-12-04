@@ -7,3 +7,9 @@
 
 class GGException(Exception):
 	pass
+
+class GGUnexceptedPacket(GGException):
+	pass
+	
+class GGNotLogged(GGException):
+	pass

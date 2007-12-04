@@ -51,7 +51,7 @@ class Enum(object):
 		if 0x002 in GGStatuses:
 			[...]
 		"""
-		return self.__reverse_lookup.contains(value)
+		return self.__reverse_lookup.has_key(value)
 #
 # Enum
 #========================
