@@ -44,6 +44,14 @@ class Enum(object):
 		if not self.__reverse_lookup.has_key(value):
 			raise AttributeError
 		return self.__reverse_lookup[value]
+	
+	def __contains__(self, value):
+		"""
+		Sprawdza, czy wartosc znajduje sie w Enumie, np.:
+		if 0x002 in GGStatuses:
+			[...]
+		"""
+		return self.__reverse_lookup.contains(value)
 #
 # Enum
 #========================

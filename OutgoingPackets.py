@@ -41,7 +41,8 @@ class GGLogin(GGOutgoingPacket):
 	"""
 	Pakiet ten wysylamy do serwera, zeby sie zalogowac
 	"""
-	def __init__(self, uin, password, status, seed, description = "", local_ip = "127.0.0.1", local_port = 1550, external_ip = "127.0.0.1", external_port = 0, image_size = 255, time = 0):
+	def __init__(self, uin, password, status, seed, description = "", local_ip = "127.0.0.1", local_port = 1550, \
+				external_ip = "127.0.0.1", external_port = 0, image_size = 255, time = 0):
 		"""
 		uin - numer gadu-gadu (int)
 		password - haslo (string)
@@ -52,7 +53,7 @@ class GGLogin(GGOutgoingPacket):
 		assert type(password) == types.StringType
 		#assert type(status) in GGStatus
 		#assert type(seed) == types.IntType or type(seed) == types.LongType
-		assert type(description) == types.StringType and len(description) <= 255
+		assert type(description) == types.StringType and len(description) <= 70
 		assert type(local_ip) == types.StringType
 		assert type(local_port) == types.IntType
 		assert type(external_ip) == types.StringType
@@ -114,7 +115,7 @@ class GGNewStatus(GGOutgoingPacket):
 		time - czas w sekundach od 1.01.1970
 		"""
 		assert type(status) == types.IntType
-		assert type(description) == types.StringType and len(description) <= 255
+		assert type(description) == types.StringType and len(description) <= 70
 		assert type(time) == types.IntType or type(time) == types.LongTime
 		
 		self.status = status
@@ -138,10 +139,10 @@ class GGSendMsg(GGOutgoingPacket):
 		msg_class - klasa wiadomosci
 		msg - wiadomosc
 		"""
-		assert type(rcpt) == types.IntType
-		assert type(seq) == types.IntType
+		assert type(rcpt) == types.IntType and rcpt > 0
+		assert type(seq) == types.IntType and seq > 0
 		assert type(msg_class) == types.IntType
-		assert type(msg) == types.StringType
+		assert type(msg) == types.StringType and len(msg) <= 2000
 		
 		self.rcpt = rcpt
 		self.seq = seq
