@@ -1,3 +1,10 @@
+#(C) Marek Chrusciel, 
+#    Jakub Kosinski, 
+#    Marcin Krupowicz,
+#    Mateusz Strycharski
+#
+# $Id$
+
 import urllib
 import urllib2
 import types
