@@ -7,6 +7,7 @@
 
 import types
 from socket import *
+import time
 
 class Connection(object): #TODO: obsluga timeoutow
 	def __init__(self, ip, port):
@@ -14,7 +15,7 @@ class Connection(object): #TODO: obsluga timeoutow
 		self.__port = port
 		self.__socket = socket(AF_INET, SOCK_STREAM)
 		self.__socket.connect((ip, port))
-	
+		
 	def send(self, data):
 		self.__socket.send(data)
 	

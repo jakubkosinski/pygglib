@@ -21,6 +21,8 @@ from Networking import Connection
 from Exceptions import *
 from HTTPServices import *
 import types
+import threading
+from threading import Timer
 
 
 class GGSession(EventsList):
@@ -30,7 +32,7 @@ class GGSession(EventsList):
 		assert initial_status in GGStatuses
 		assert type(initial_description) == types.StringType and len(initial_description) <= 70
 		
-		EventsList.__init__(self, ['on_login_ok', 'on_login_failed', 'on_need_email'])
+		EventsList.__init__(self, ['on_login_ok', 'on_login_failed', 'on_need_email', 'on_msg_recv', 'on_unknown_packet'])
 		self.__uin = uin
 		self.__password = password
 		self.__status = initial_status
@@ -47,6 +49,32 @@ class GGSession(EventsList):
 		
 		self.__connection = None
 		
+		self.__pinger = Timer(120.0, self.__ping) # co 2 minuty pingujemy serwer
+		self.__events_thread = threading.Thread(target = self.__events_loop)
+	
+	def __events_loop(self):
+		"""
+		Start watku listenera
+		"""
+		while True:
+			header = GGHeader()
+			header.read(self.__connection)
+			if header.type == GGIncomingPackets.GGRecvMsg:
+				in_packet = GGRecvMsg()
+				in_packet.read(conn, header.length)
+				self.on_msg_recv(self, (in_packet.sender, in_packet.seq, in_packet.time, in_packet.msg_class, in_packet.msg))
+				if in_packet.msg == 'stop':
+					break
+			else:
+				self.on_unknown_packet(self, (header.type, header.length))
+	
+	def __ping(self):
+		"""
+		wysyla pakiet GGPing do serwera
+		"""
+		out_packet = GGPing()
+		out_packet.send(self.__connection)
+	
 	
 	def login(self):
 		"""
@@ -72,12 +100,14 @@ class GGSession(EventsList):
 			in_packet.read(self.__connection, header.length)
 			self.change_status(self.__status, self.__description) #ustawienie statusu przy pakiecie GGLogin cos nie dziala :/
 			self.on_login_ok(self, None)
+			self.__events_thread.start() #uruchamiamy watek listenera
 		elif header.type == GGIncomingPackets.GGLoginFailed:
 			self.on_login_failed(self, None)
 		elif header.type == GGIncomingPackets.GGNeedEMail:
 			self.on_need_email(self, None)
 		else:
 			raise GGUnexceptedPacket((header.type, header.length))
+	
 	
 	def logout(self, description = ''):
 		"""

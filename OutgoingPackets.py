@@ -155,3 +155,13 @@ class GGSendMsg(GGOutgoingPacket):
 		data = struct.pack("<III%ds" % (len(self.msg) + 1), self.rcpt, self.seq, self.msg_class, self.msg)
 		connection.send(repr(GGHeader(GGOutgoingPackets.GGSendMsg, len(data))) + data)
 		
+class GGPing(GGOutgoingPacket):
+	"""
+	Co jakis czas trzeba wysylac do serwera GG pakiet GGPing. W przeciwnym przypadku, serwer nas rozlaczy.
+	"""
+	def __init__(self):
+		pass
+	
+	def send(self, connection):
+		assert type(connection) == Connection
+		connection.send(repr(GGHeader(GGOutgoingPackets.GGPing, 0)))
