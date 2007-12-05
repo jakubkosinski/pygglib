@@ -74,7 +74,7 @@ class HTTPServices(object):
 		response = urllib2.urlopen(request)
 		info = response.read().replace('\r\n',' ').split(' ')
 		width, height, length, id, url = info
-		return Token(width, height, length, id, url)
+		return Token(width, height, length, id, url + '?tokenid=' + id)
 
 	get_server = classmethod(get_server)
 	get_token_data = classmethod(get_token_data)
