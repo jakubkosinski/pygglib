@@ -3,6 +3,7 @@
 #    Marcin Krupowicz,
 #    Mateusz Strycharski
 #
+# $Id$
 
 from Helpers import Enum
 
@@ -31,7 +32,7 @@ GGRemotePort = Enum({
 	"NotInBuddyList":2 #Klient nie ma nas w swojej liscie kontaktow
 	})
 	
-GGSeqNumber = Enum({
+GGMsgTypes = Enum({
 	"Queued":0x0001, #Bit ustawiany wylacznie przy odbiorze wiadomosci, gdy wiadomosc zostala wczesniej zakolejkowana z powodu nieobecnosci
 	"Msg":0x0004, #Wiadomosc ma sie pojawic w osobnym okienku
 	"Chat":0x0008, #Wiadomosc jest czescia toczacej sie rozmowy i zostanie wyswietlona w istniejacym okienku

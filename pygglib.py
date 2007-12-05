@@ -12,6 +12,8 @@ Autorzy:
 
 #$Id$
 
+from __future__ import with_statement
+
 from IncomingPackets import *
 from OutgoingPackets import *
 from HeaderPacket import GGHeader
@@ -22,7 +24,9 @@ from Exceptions import *
 from HTTPServices import *
 import types
 import threading
+import thread
 from threading import Timer
+import time
 
 
 class GGSession(EventsList):
@@ -32,7 +36,7 @@ class GGSession(EventsList):
 		assert initial_status in GGStatuses
 		assert type(initial_description) == types.StringType and len(initial_description) <= 70
 		
-		EventsList.__init__(self, ['on_login_ok', 'on_login_failed', 'on_need_email', 'on_msg_recv', 'on_unknown_packet'])
+		EventsList.__init__(self, ['on_login_ok', 'on_login_failed', 'on_need_email', 'on_msg_recv', 'on_unknown_packet', 'on_send_msg_ack'])
 		self.__uin = uin
 		self.__password = password
 		self.__status = initial_status
@@ -52,62 +56,74 @@ class GGSession(EventsList):
 		self.__pinger = Timer(120.0, self.__ping) # co 2 minuty pingujemy serwer
 		self.__events_thread = threading.Thread(target = self.__events_loop)
 	
+		self.__lock = threading.RLock() #blokada dla watku
+		
 	def __events_loop(self):
 		"""
 		Start watku listenera
 		"""
-		while True:
+		while self.__logged:
 			header = GGHeader()
 			header.read(self.__connection)
 			if header.type == GGIncomingPackets.GGRecvMsg:
 				in_packet = GGRecvMsg()
-				in_packet.read(conn, header.length)
-				self.on_msg_recv(self, (in_packet.sender, in_packet.seq, in_packet.time, in_packet.msg_class, in_packet.msg))
-				if in_packet.msg == 'stop':
-					break
+				in_packet.read(self.__connection, header.length)
+				self.on_msg_recv(self, (in_packet.sender, in_packet.seq, in_packet.time, in_packet.msg_class, in_packet.message))
+			elif header.type == GGIncomingPackets.GGSendMsgAck:
+				in_packet = GGSendMsgAck()
+				in_packet.read(self.__connection, header.length)
+				self.on_send_msg_ack(self, (in_packet.status, in_packet.recipient, in_packet.seq))
 			else:
+				self.__connection.read(header.length) #odbieramy smieci.. ;)
 				self.on_unknown_packet(self, (header.type, header.length))
+			time.sleep(0.1)
 	
 	def __ping(self):
 		"""
 		wysyla pakiet GGPing do serwera
 		"""
-		out_packet = GGPing()
-		out_packet.send(self.__connection)
+		with self.__lock:
+			out_packet = GGPing()
+			out_packet.send(self.__connection)
 	
 	
 	def login(self):
 		"""
 		Logowanie sie do sieci GG
 		"""
-		server, port = HTTPServices.get_server(self.__uin)
-		self.__connection = Connection(server, port)
-		self.__connected = True #TODO: sprawdzanie tego i timeouty
-		header = GGHeader()
-		header.read(self.__connection)
-		if header.type != GGIncomingPackets.GGWelcome:
-			raise GGUnexceptedPacket((header.type, header.length))
-		in_packet = GGWelcome()
-		in_packet.read(self.__connection, header.length)
-		seed = in_packet.seed
-		out_packet = GGLogin(self.__uin, self.__password, self.__status, seed, self.__description, self.__local_ip, \
-								self.__local_port, self.__external_ip, self.__external_port, self.__image_size)
-		out_packet.send(self.__connection)
-		header.read(self.__connection)
-		if header.type == GGIncomingPackets.GGLoginOK:
-			self.__logged = True
-			in_packet = GGLoginOK()
+		with self.__lock:
+			server, port = HTTPServices.get_server(self.__uin)
+			self.__connection = Connection(server, port)
+			print 'connected'
+			self.__connected = True #TODO: sprawdzanie tego i timeouty
+			header = GGHeader()
+			header.read(self.__connection)
+			if header.type != GGIncomingPackets.GGWelcome:
+				raise GGUnexceptedPacket((header.type, header.length))
+			in_packet = GGWelcome()
 			in_packet.read(self.__connection, header.length)
-			self.change_status(self.__status, self.__description) #ustawienie statusu przy pakiecie GGLogin cos nie dziala :/
-			self.on_login_ok(self, None)
-			self.__events_thread.start() #uruchamiamy watek listenera
-		elif header.type == GGIncomingPackets.GGLoginFailed:
-			self.on_login_failed(self, None)
-		elif header.type == GGIncomingPackets.GGNeedEMail:
-			self.on_need_email(self, None)
-		else:
-			raise GGUnexceptedPacket((header.type, header.length))
-	
+			print 'welcome received'
+			seed = in_packet.seed
+			out_packet = GGLogin(self.__uin, self.__password, self.__status, seed, self.__description, self.__local_ip, \
+									self.__local_port, self.__external_ip, self.__external_port, self.__image_size)
+			out_packet.send(self.__connection)
+			print 'login sent'
+			header.read(self.__connection)
+			print 'header received: %d, %d' % (header.type, header.length)
+			if header.type == GGIncomingPackets.GGLoginOK:
+				self.__logged = True
+				in_packet = GGLoginOK()
+				in_packet.read(self.__connection, header.length)
+				self.change_status(self.__status, self.__description) #ustawienie statusu przy pakiecie GGLogin cos nie dziala :/
+				self.on_login_ok(self, None)
+				self.__events_thread.start() #uruchamiamy watek listenera
+			elif header.type == GGIncomingPackets.GGLoginFailed:
+				self.on_login_failed(self, None)
+			elif header.type == GGIncomingPackets.GGNeedEMail:
+				self.on_need_email(self, None)
+			else:
+				raise GGUnexceptedPacket((header.type, header.length))
+
 	
 	def logout(self, description = ''):
 		"""
@@ -116,9 +132,12 @@ class GGSession(EventsList):
 		assert type(description) == types.StringType and len(description) <= 70
 		
 		self.change_status(description == '' and GGStatuses.NotAvail or GGStatuses.NotAvailDescr, description)
-		self.__connection.disconnect()
-		self.__connected = False
-		self.__logged = False
+		with self.__lock:
+			self.__logged = False # przed join(), zeby zakonczyc watek
+			self.__events_thread.join()
+			self.__pinger.cancel()
+			self.__connection.disconnect()
+			self.__connected = False
 		
 	def change_status(self, status, description):
 		"""
@@ -130,10 +149,11 @@ class GGSession(EventsList):
 		if not self.__logged:
 			raise GGNotLogged
 		
-		out_packet  = GGNewStatus(status, description)
-		out_packet.send(self.__connection)
-		self.__status = status
-		self.__description = description
+		with self.__lock:
+			out_packet  = GGNewStatus(status, description)
+			out_packet.send(self.__connection)
+			self.__status = status
+			self.__description = description
 	
 	def send_msg(self, rcpt, msg, seq = 0, msg_class = 0x0004): #TODO: msg_class na enumy...
 		assert type(rcpt) == types.IntType
@@ -141,5 +161,6 @@ class GGSession(EventsList):
 		assert type(seq) == types.IntType
 		assert type(msg_class) == types.IntType #TODO: and msg_class in GGMsgClasses
 		
-		out_packet = GGSendMsg(rcpt, msg, seq, msg_class)
-		out_packet.send(self.__connection)
+		with self.__lock:
+			out_packet = GGSendMsg(rcpt, msg, seq, msg_class)
+			out_packet.send(self.__connection)
