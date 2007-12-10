@@ -8,6 +8,9 @@
 import urllib
 import urllib2
 import types
+import time
+import random
+import Helpers
 
 class Token(object):
 	"""
@@ -76,5 +79,58 @@ class HTTPServices(object):
 		width, height, length, id, url = info
 		return Token(width, height, length, id, url + '?tokenid=' + id)
 
+	def register_account(self, pwd, email, tokenid, tokenval):
+	"""
+	Metoda rejestruje nowe konto w sieci Gadu-Gadu. Przyjmuje nastepujace parametry:
+		* pwd - haslo uzytkownika
+		* email - email uzytkownika, sluzacy do odzyskiwania hasla
+		* tokenid - ID tokena pobranego metoda get_token_data
+		* tokenval - tresc z obrazka tokena
+	Zwraca przydzielony numer konta. W przypadku blednych danych tokena rzucany jest wyjatek
+	"""
+		code = Helpers.gg_http_hash(email, pwd)
+		url = 'http://register.gadu-gadu.pl/appsvc/fmregister3.asp'
+		user_agent = 'Mozilla/4.0 (compatible; MSIE 5.0; Windows 98)'
+		data = urllib.urlencode({'pwd' : pwd, 'email' : email, 'tokenid' : tokenid, 'tokenval' : tokenval, 'code' : code})
+		
+		request = urllib2.Request(url, data)
+		request.add_header('User-Agent', user_agent)
+		
+		response = urllib2.urlopen(request)
+		text = response.read()
+		print text
+		if text == 'bad_tokenval':
+			raise Exception('HTTPServices.register_account: Bad tokenval')
+		uin = text[text.find(':')+1:len(text)]
+		return uin
+		
+	def delete_account(self, fmnumber, fmpwd, tokenid, tokenval):
+	"""
+	Metoda usuwa konto o numerze fmnumber z serwerów Gadu-Gadu. Przyjmuje nastepujace parametry:
+		* fmnumber - numer Gadu-Gadu do usuniecia
+		* fmpwd - haslo do numeru
+		* tokenid - ID tokena pobranego metoda get_token_data
+		* tokenval - tresc z obrazka tokena
+	Zwraca True gdy numer zostanie usuniety lub False w przeciwnym wypadku
+	"""
+		code = Helpers.gg_http_hash('deleteaccount@gadu-gadu.pl', fmpwd)
+		random.seed(int(time.time()))
+		pwd = random.randint(0,0xffff)
+		url = 'http://register.gadu-gadu.pl/appsvc/fmregister3.asp'
+		user_agent = 'Mozilla/4.0 (compatible; MSIE 5.0; Windows 98)'
+		data = urllib.urlencode({'fmnumber' : fmnumber, 'fmpwd' : fmpwd, 'delete' : 1, 'pwd' : pwd, 'email' : 'deleteaccount@gadu-gadu.pl', 'tokenid' : tokenid, 'tokenval' : tokenval, 'code' : code})
+		
+		request = urllib2.Request(url, data)
+		request.add_header('User-Agent', user_agent)
+		
+		response = urllib2.urlopen(request)
+		text = response.read()
+		if text == 'reg_success:'+str(fmnumber):
+			return True
+		else:
+			return False
+	
 	get_server = classmethod(get_server)
 	get_token_data = classmethod(get_token_data)
+	register_account = classmethod(register_account)
+	delete_account = classmethod(delete_account)

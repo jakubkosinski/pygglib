@@ -147,6 +147,22 @@ def gg_login_hash(password, seed):
 	#return struct.pack("<I60s", y, str(0x00))[0]
 	#return hashlib.sha1(password).digest()
 
+def gg_http_hash(email,pwd):
+	"""
+	Zwraca hash z emaila oraz hasla, potrzebny przy rejestracji i usuwaniu konta
+	"""
+	a = 0
+	b = -1
+	
+	for c in email:
+		a = (ord(c) ^ b) + ((ord(c) << 8) & 0xffffffff);
+		b = (a >> 24) | ((a << 8) & 0xffffffff);
+	
+	for c in pwd:
+		a = (ord(c) ^ b) + ((ord(c) << 8) & 0xffffffff);
+		b = (a >> 24) | ((a << 8) & 0xffffffff);
+
+	return int(abs(b))
 
 
 def ip_to_int32(ip):
