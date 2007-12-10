@@ -3,6 +3,7 @@ Biblioteka sluzaca do osblugi protokolu Gadu-Gadu (http://www.gadu-gadu.pl).
 Biblioteka powstala dzieki opisie protokolu ze strony: 
 http://ekg.chmurka.net/docs/protocol.html
 
+
 Autorzy:
 	Marek Chrusciel
 	Jakub Kosinski
@@ -29,7 +30,17 @@ from threading import Timer
 import time
 
 
-class GGSession(EventsList):
+## Glowna klasa do obslugi protokolu gg. 
+# Umozliwia podstawowe operacje. Tworzy sesje obslugi protokolu.
+#
+class GGSession(EventsList):	
+		## Konstruktor dla sesji gg.
+		#
+		#\param uin	                          nr gadu-gadu, dla ktorego bedzie tworzona sesja
+		#\param password	                 haslo dla nr gadu-gadu
+		#\param initial_status           poczatkowy status dostepnosci
+		#\param initial_description     poczatkowy opis 
+		#
 	def __init__(self, uin, password, initial_status = GGStatuses.Avail, initial_description = ''):
 		assert type(uin) == types.IntType
 		assert type(password) == types.StringType
@@ -58,10 +69,9 @@ class GGSession(EventsList):
 	
 		self.__lock = threading.RLock() #blokada dla watku
 		
+	## Metoda powoduje uruchomienie listenera
+	#
 	def __events_loop(self):
-		"""
-		Start watku listenera
-		"""
 		while self.__logged:
 			header = GGHeader()
 			header.read(self.__connection)
@@ -78,19 +88,17 @@ class GGSession(EventsList):
 				self.on_unknown_packet(self, (header.type, header.length))
 			time.sleep(0.1)
 	
+	
+	## Metoda wysyla pakiet GGPing do serwera
+	#
 	def __ping(self):
-		"""
-		wysyla pakiet GGPing do serwera
-		"""
 		with self.__lock:
 			out_packet = GGPing()
 			out_packet.send(self.__connection)
 	
-	
+	## Logowanie do sieci gg
+	#
 	def login(self):
-		"""
-		Logowanie sie do sieci GG
-		"""
 		with self.__lock:
 			server, port = HTTPServices.get_server(self.__uin)
 			self.__connection = Connection(server, port)
@@ -124,11 +132,10 @@ class GGSession(EventsList):
 			else:
 				raise GGUnexceptedPacket((header.type, header.length))
 
-	
+	## Wylogowanie z sieci GG i ustawienie statusu na niedostepny
+	# \param description Taki opis zostanie pozostawiony
+	#
 	def logout(self, description = ''):
-		"""
-		Wylogowanie z sieci GG i (jesli niepusty) pozostawienie statusu na nieostepny z opisem 'description'
-		"""
 		assert type(description) == types.StringType and len(description) <= 70
 		
 		self.change_status(description == '' and GGStatuses.NotAvail or GGStatuses.NotAvailDescr, description)
@@ -139,10 +146,10 @@ class GGSession(EventsList):
 			self.__connection.disconnect()
 			self.__connected = False
 		
+	## Zmiana statusu i opisu
+	# \param status Taki staus dosteonosci zostanie ustawiony
+	#\param description Taki opis zostanie ustawiony
 	def change_status(self, status, description):
-		"""
-		Zmiana statusu
-		"""
 		assert type(status) == types.IntType and status in GGStatuses
 		assert type(description) == types.StringType and len(description) <= 70
 		
@@ -155,6 +162,9 @@ class GGSession(EventsList):
 			self.__status = status
 			self.__description = description
 	
+	## Wyslanie wiadomosci gg
+	# \param rcpt nr gadu-gadu odbiorcy
+	#\param msg wiadomosc do dostarczenia, dlugosc musi byc mniejsza od 2000 znakow
 	def send_msg(self, rcpt, msg, seq = 0, msg_class = 0x0004): #TODO: msg_class na enumy...
 		assert type(rcpt) == types.IntType
 		assert type(msg) == types.StringType and len(msg) < 2000 #TODO: w dalszych iteracjach: obsluga richtextmsg
