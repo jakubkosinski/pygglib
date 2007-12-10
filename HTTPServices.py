@@ -106,7 +106,7 @@ class HTTPServices(object):
 		
 	def delete_account(self, fmnumber, fmpwd, tokenid, tokenval):
 	"""
-	Metoda usuwa konto o numerze fmnumber z serwerów Gadu-Gadu. Przyjmuje nastepujace parametry:
+	Metoda usuwa konto o numerze fmnumber z serwerow Gadu-Gadu. Przyjmuje nastepujace parametry:
 		* fmnumber - numer Gadu-Gadu do usuniecia
 		* fmpwd - haslo do numeru
 		* tokenid - ID tokena pobranego metoda get_token_data
