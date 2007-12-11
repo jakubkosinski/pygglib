@@ -31,7 +31,7 @@ GGUserTypes = Enum({
 	"Blocked":0x04 #Uzytkownik, ktorego wiadomosci nie chcemy otrzymywac
 	})
 	
-## Informacje o uzytkowniku, ktorego gg mamy w kontaktach (pytujemy serwer o te informacje)
+## Informacje o uzytkowniku, ktorego gg mamy w kontaktach (odpytujemy serwer o te informacje)
 #
 GGRemotePort = Enum({
 	"NotStraightConnection":0, #Klient nie obsluguje bezposredniego polaczenia
@@ -65,5 +65,6 @@ GGNotifyTypes = Enum({
 	"NotifyFirst":0x000f, # nieostatnie 400 wpisow w liscie kontaktow
 	"NotifyLast":0x0010   # ostatnie 400 wpisow
 	})
+	
 
 	
