@@ -39,3 +39,4 @@ if __name__ == "__main__":
 	time.sleep(5)
 	session.send_msg(3993939, 'msg2')
 	session.logout()
+	x = input()

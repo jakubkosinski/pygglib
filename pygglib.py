@@ -102,7 +102,6 @@ class GGSession(EventsList):
 		with self.__lock:
 			server, port = HTTPServices.get_server(self.__uin)
 			self.__connection = Connection(server, port)
-			print 'connected'
 			self.__connected = True #TODO: sprawdzanie tego i timeouty
 			header = GGHeader()
 			header.read(self.__connection)
@@ -110,14 +109,11 @@ class GGSession(EventsList):
 				raise GGUnexceptedPacket((header.type, header.length))
 			in_packet = GGWelcome()
 			in_packet.read(self.__connection, header.length)
-			print 'welcome received'
 			seed = in_packet.seed
 			out_packet = GGLogin(self.__uin, self.__password, self.__status, seed, self.__description, self.__local_ip, \
 									self.__local_port, self.__external_ip, self.__external_port, self.__image_size)
 			out_packet.send(self.__connection)
-			print 'login sent'
 			header.read(self.__connection)
-			print 'header received: %d, %d' % (header.type, header.length)
 			if header.type == GGIncomingPackets.GGLoginOK:
 				self.__logged = True
 				in_packet = GGLoginOK()
