@@ -22,6 +22,7 @@ GGOutgoingPackets = Enum({
 	"GGRemoveNotify":0x000e, #Usuniecie z listy kontaktow
 	"GGNotifyFirst":0x000f, #Poczatkowy fragment listy kontaktow wiekszej niz 400 wpisow
 	"GGNotifyLast":0x00010, #Ostatni fragment listy kontaktow
+	"GGListEmpty":0x0012, #Nasza lista kontaktow jest pusta
 	"GGLoginExt":0x0013, #Logowanie przed GG 6.0
 	"GGPubDir50Request":0x0014, #Zapytanie katalogu publicznego
 	"GGLogin60":0x0015, #Logowanie
@@ -165,3 +166,66 @@ class GGPing(GGOutgoingPacket):
 	def send(self, connection):
 		assert type(connection) == Connection
 		connection.send(repr(GGHeader(GGOutgoingPackets.GGPing, 0)))
+
+class GGListEmpty(GGOutgoingPacket):
+	"""
+	Jesli nie mamy nikogo na liscie kontaktow, wysylamy ten pakiet - np. zaraz po zalogowaniu sie
+	"""
+	def __init__(self):
+		pass
+	
+	def send(self, connection):
+		assert type(connection) == Connection
+		connection.send(repr(GGHeader(GGOutgoingPackets.GGListEmpty, 0)))
+
+class GGNotifyFirst(GGOutgoingPacket):
+	"""
+	Pierwsze wpisy (kazde po 400 kontaktow zawieraja) listy kontaktow, ktora wysylamy serwerowi po polaczeniu.
+	"""
+	def __init__(self, gg_notify_list):
+		"""
+		gg_notify_list list to lista krotek postaci: (uin, typ_uzytkownika)
+		"""
+		assert type(gg_notify_list) == types.ListType
+		for notify in gg_notify_list:
+			assert type(notify) == types.TupleType
+			assert len(notify) == 2
+			assert type(notify[0]) == types.IntType and type(notify([1])) in GGUserTypes
+		assert len(gg_notify_list) == 400
+		
+		self.__gg_notify_list = gg_notify_list
+	
+	def send(self, connection):
+		assert type(connection) == Connection
+		data = ""
+		for notify in self.__gg_notify_list:
+			data += struct.pack("<IB", notify[0], notify[1])
+		connection.send(repr(GGHeader(GGOutgoingPackets.GGNotifyFirst, len(data))) + data)
+
+class GGNotifyLast(GGOutgointPacket):
+	"""
+	Ostatnie wpisy listy kontaktow (maksymalnie 400), ktore wysylamy zaraz po podlaczaniu. Jesli lista kontaktow
+	zawiera <= 400 kontaktow to wysylamy jedynie ten pakiet. Jesli wiecej, to wysylamy najpierw pakiety GGNotifyFirst,
+	a na koncu ten pakiet
+	"""
+	def __init__(self, gg_notify_list):
+		"""
+		gg_notify_list list to lista krotek postaci: (uin, typ_uzytkownika)
+		"""
+		assert type(gg_notify_list) == types.ListType
+		for notify in gg_notify_list:
+			assert type(notify) == types.TupleType
+			assert len(notify) == 2
+			assert type(notify[0]) == types.IntType and type(notify([1])) in GGUserTypes
+		assert len(gg_notify_list) <= 400 #TODO: <= czy < ??? W protokole jest niejasno napisane... :(
+		
+		self.__gg_notify_list = gg_notify_list
+	
+	def send(self, connection):
+		assert type(connection) == Connection
+		data = ""
+		for notify in self.__gg_notify_list:
+			data += struct.pack("<IB", notify[0], notify[1])
+		connection.send(repr(GGHeader(GGOutgoingPackets.GGNotifyLast, len(data))) + data)
+
+	

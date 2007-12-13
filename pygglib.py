@@ -92,6 +92,8 @@ class GGSession(EventsList):
 	## Metoda wysyla pakiet GGPing do serwera
 	#
 	def __ping(self):
+		if not self.__logged:
+			raise GGNotLogged
 		with self.__lock:
 			out_packet = GGPing()
 			out_packet.send(self.__connection)
@@ -134,6 +136,9 @@ class GGSession(EventsList):
 	def logout(self, description = ''):
 		assert type(description) == types.StringType and len(description) <= 70
 		
+		if not self.__logged:
+			raise GGNotLogged
+		
 		self.change_status(description == '' and GGStatuses.NotAvail or GGStatuses.NotAvailDescr, description)
 		with self.__lock:
 			self.__logged = False # przed join(), zeby zakonczyc watek
@@ -158,6 +163,16 @@ class GGSession(EventsList):
 			self.__status = status
 			self.__description = description
 	
+	def change_description(self, description):
+		assert type(description) == types.StringType and len(description) <= 70
+		
+		if self.__status != GGStatuses.AvailDescr and self.__status != GGStatuses.BusyDescr and self.__status != GGStatuses.InvisibleDescr:
+			raise GGException("Can't change description - current status has'n description") 
+		if not self.__logged:
+			raise GGNotLogged
+		
+		self.change_status(self.__status, description)
+	
 	## Wyslanie wiadomosci gg
 	# \param rcpt nr gadu-gadu odbiorcy
 	#\param msg wiadomosc do dostarczenia, dlugosc musi byc mniejsza od 2000 znakow
@@ -167,6 +182,12 @@ class GGSession(EventsList):
 		assert type(seq) == types.IntType
 		assert type(msg_class) == types.IntType #TODO: and msg_class in GGMsgClasses
 		
+		if not self.__logged:
+			raise GGNotLogged
+		
 		with self.__lock:
 			out_packet = GGSendMsg(rcpt, msg, seq, msg_class)
 			out_packet.send(self.__connection)
+	
+	
+	

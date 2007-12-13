@@ -38,5 +38,12 @@ if __name__ == "__main__":
 	session.send_msg(3993939, 'msg1')
 	time.sleep(5)
 	session.send_msg(3993939, 'msg2')
+	time.sleep(5)
+	print 'Changing status...'
+	session.change_status(GGStatuses.AvailDescr, "pygglib")
+	time.sleep(5)
+	print 'Changing description...'
+	session.change_description("ala ma kota")
+	time.sleep(5)
 	session.logout()
 	x = input()

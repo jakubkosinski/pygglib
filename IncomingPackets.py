@@ -90,3 +90,12 @@ class GGSendMsgAck(GGIncomingPacket):
 		self.status = structure[0]
 		self.recipient = structure[1]
 		self.seq = structure[2]
+
+		
+class GGNotifyReply(GGIncomingPacket):
+	"""
+	Odpowiedz serwera na pakiety GGNotifyFirst i GGNotifyLast.
+	Zawiera liste struktur postaci:
+		
+	"""
+	pass #TODO
