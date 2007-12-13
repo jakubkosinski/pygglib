@@ -13,3 +13,9 @@ class GGUnexceptedPacket(GGException):
 	
 class GGNotLogged(GGException):
 	pass
+
+class GGServerNotOperating(GGException):
+	pass
+	
+class GGBadTokenVal(GGException):
+	pass

@@ -4,13 +4,11 @@ sys.path.append("..\\..\\src") # - dla windowsa
 
 from pygglib import *
 from HTTPServices import *
-import urllib2
 
 def register_account(pwd,email):
 	token = HTTPServices.get_token_data()
 	f = open('token-'+token.id+'.gif','wb')
-	request = urllib2.urlopen(token.url)
-	f.write(request.read())
+	f.write(token.image)
 	f.close()
 	
 	print "Podaj kod z obrazka: "
@@ -27,8 +25,7 @@ def register_account(pwd,email):
 def delete_account(uin, pwd):
 	token = HTTPServices.get_token_data()
 	f = open('token-'+token.id+'.gif','wb')
-	request = urllib2.urlopen(token.url)
-	f.write(request.read())
+	f.write(token.image)
 	f.close()
 	
 	print "Podaj kod z obrazka: "

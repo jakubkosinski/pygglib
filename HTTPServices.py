@@ -38,13 +38,20 @@ class Token(object):
 	def __get_url(self):
 		return self.__url
 		
-	width = property(__get_width)
-	height = property(__get_height)
-	length = property(__get_length)
-	id = property(__get_id)
-	url = property(__get_url)
+	def __get_image(self):
+		request = urllib2.urlopen(self.__url)
+		return request.read()
+		
+	width = property(__get_width)   # zwraca dlugosc obrazka
+	height = property(__get_height) # zwraca wysokosc obrazka
+	length = property(__get_length) # zwraca rozmiar obrazka (?)
+	id = property(__get_id)         # zwraca numer id tokena
+	url = property(__get_url)       # zwraca URL tokena
+	image = property(__get_image)   # zwraca strumien z obrazkiem w formacie GIF
 
 class HTTPServices(object):
+
+	__user_agent = 'Mozilla/4.0 (compatible; MSIE 5.0; Windows 98)'
 	
 	def get_server(self,uin):
 		"""
@@ -53,13 +60,14 @@ class HTTPServices(object):
 		assert type(uin) == types.IntType
 		
 		url = 'http://appmsg.gadu-gadu.pl/appsvc/appmsg4.asp?fmnumber=' + str(uin) + '&version=7,7,0,3315&lastmsg=0'
-		user_agent = 'Mozilla/4.7 [en] (Win98; I)'
 
 		request = urllib2.Request(url)
-		request.add_header('User-Agent', user_agent)
+		request.add_header('User-Agent', self.__user_agent)
 		
 		response = urllib2.urlopen(request)
 		info = response.read().split(' ')
+		if info[2] == 'notoperating':
+			raise GGServerNotOperating('HTTPServices.get_server: Server is not operating')
 		server = info[2].split(':')[0]
 		port = info[2].split(':')[1]
 		return server, int(port)
@@ -69,10 +77,9 @@ class HTTPServices(object):
 		Metoda pobiera z serwera Gadu-Gadu dane tokena potrzebnego do rejestracji konta. Zwraca obiekt typu Token
 		"""
 		url = 'http://register.gadu-gadu.pl/appsvc/regtoken.asp'
-		user_agent = 'Mozilla/4.0 (compatible; MSIE 5.0; Windows 98)'
 		
 		request = urllib2.Request(url)
-		request.add_header('User-Agent', user_agent)
+		request.add_header('User-Agent', self.__user_agent)
 		
 		response = urllib2.urlopen(request)
 		info = response.read().replace('\r\n',' ').split(' ')
@@ -90,18 +97,17 @@ class HTTPServices(object):
 		"""
 		code = Helpers.gg_http_hash(email, pwd)
 		url = 'http://register.gadu-gadu.pl/appsvc/fmregister3.asp'
-		user_agent = 'Mozilla/4.0 (compatible; MSIE 5.0; Windows 98)'
 		data = urllib.urlencode({'pwd' : pwd, 'email' : email, 'tokenid' : tokenid, 'tokenval' : tokenval, 'code' : code})
 		
 		request = urllib2.Request(url, data)
-		request.add_header('User-Agent', user_agent)
+		request.add_header('User-Agent', self.__user_agent)
 		
 		response = urllib2.urlopen(request)
 		text = response.read()
 		if text == 'bad_tokenval':
-			raise Exception('HTTPServices.register_account: Bad tokenval')
+			raise GGBadTokenVal('HTTPServices.register_account: Bad tokenval')
 		uin = text[text.find(':')+1:len(text)]
-		return uin
+		return int(uin)
 		
 	def delete_account(self, fmnumber, fmpwd, tokenid, tokenval):
 		"""
@@ -116,11 +122,10 @@ class HTTPServices(object):
 		random.seed(int(time.time()))
 		pwd = random.randint(0,0xffff)
 		url = 'http://register.gadu-gadu.pl/appsvc/fmregister3.asp'
-		user_agent = 'Mozilla/4.0 (compatible; MSIE 5.0; Windows 98)'
 		data = urllib.urlencode({'fmnumber' : fmnumber, 'fmpwd' : fmpwd, 'delete' : 1, 'pwd' : pwd, 'email' : 'deleteaccount@gadu-gadu.pl', 'tokenid' : tokenid, 'tokenval' : tokenval, 'code' : code})
 		
 		request = urllib2.Request(url, data)
-		request.add_header('User-Agent', user_agent)
+		request.add_header('User-Agent', __user_agent)
 		
 		response = urllib2.urlopen(request)
 		text = response.read()
@@ -140,15 +145,42 @@ class HTTPServices(object):
 		"""
 		code = Helpers.gg_http_hash(str(userid), email)
 		url = 'http://retr.gadu-gadu.pl/appsvc/fmsendpwd3.asp'
-		user_agent = 'Mozilla/4.0 (compatible; MSIE 5.0; Windows 98)'
 		data = urllib.urlencode({'userid' : userid, 'email' : email, 'tokenid' : tokenid, 'tokenval' : tokenval, 'code' : code})
 		
 		request = urllib2.Request(url, data)
-		request.add_header('User-Agent', user_agent)
+		request.add_header('User-Agent', self.__user_agent)
 		
 		response = urllib2.urlopen(request)
 		text = response.read()
 		if text == 'pwdsend_success':
+			return True
+		else:
+			return False
+		
+	def change_password(self, fmnumber, fmpwd, pwd, email, tokenid, tokenval):
+		"""
+		Metoda zmienia haslo i/lub email uzytkownika. Przyjmuje parametry:
+			* fmnumber - numer Gadu-Gadu uzytkownika
+			* fmpwd - stare haslo
+			* pwd - nowe haslo
+			* email - nowy adres email
+			* tokenid - ID tokena pobranego metoda get_token_data
+			* tokenval - tresc z obrazka tokena
+		Zwraca True gdy operacja sie powiodla, False w przeciwnym wypadku
+		"""
+		if pwd == '': # w przypadku zmiany samego emaila
+			pwd = fmpwd
+			
+		code = Helpers.gg_http_hash(pwd, email)
+		url = 'http://register.gadu-gadu.pl/appsvc/fmregister3.asp'
+		data = urllib.urlencode({'fmnumber' : fmnumber, 'fmpwd' : fmpwd, 'pwd' : pwd, 'email' : email, 'tokenid' : tokenid, 'tokenval' : tokenval, 'code' : code})
+		
+		request = urllib2.Request(url, data)
+		request.add_header('User-Agent', self.__user_agent)
+		
+		response = urllib2.urlopen(request)
+		text = response.read()
+		if text == 'reg_success:' + str(fmnumber):
 			return True
 		else:
 			return False
@@ -158,3 +190,4 @@ class HTTPServices(object):
 	register_account = classmethod(register_account)
 	delete_account = classmethod(delete_account)
 	remind_password = classmethod(remind_password)
+	change_password = classmethod(change_password)
