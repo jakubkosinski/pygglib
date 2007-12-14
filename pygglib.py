@@ -47,7 +47,8 @@ class GGSession(EventsList):
 		assert initial_status in GGStatuses
 		assert type(initial_description) == types.StringType and len(initial_description) <= 70
 		
-		EventsList.__init__(self, ['on_login_ok', 'on_login_failed', 'on_need_email', 'on_msg_recv', 'on_unknown_packet', 'on_send_msg_ack'])
+		EventsList.__init__(self, ['on_login_ok', 'on_login_failed', 'on_need_email', 'on_msg_recv', \
+								   'on_unknown_packet', 'on_send_msg_ack', 'on_notify_reply'])
 		self.__uin = uin
 		self.__password = password
 		self.__status = initial_status
@@ -83,6 +84,14 @@ class GGSession(EventsList):
 				in_packet = GGSendMsgAck()
 				in_packet.read(self.__connection, header.length)
 				self.on_send_msg_ack(self, (in_packet.status, in_packet.recipient, in_packet.seq))
+			elif header.type == GGIncomingPackets.GGNotifyReplyOld:
+				in_packet = GGNotifyReplyOld(self.contacts_list)
+				in_packet.read(self.__connection, header.length)
+				self.on_notify_reply(self, self.contacts_list)
+			elif header.type == GGIncomingPackets.GGNotifyReply60 or header.type == GGIncomingPackets.GGNotifyReply77:
+				in_packet = GGNotifyReply(self.contacts_list, header.type)
+				in_packet.read(self.__connection, header.length)
+				self.on_notify_reply(self, self.contacts_list)
 			else:
 				self.__connection.read(header.length) #odbieramy smieci.. ;)
 				self.on_unknown_packet(self, (header.type, header.length))
@@ -176,11 +185,11 @@ class GGSession(EventsList):
 	## Wyslanie wiadomosci gg
 	# \param rcpt nr gadu-gadu odbiorcy
 	#\param msg wiadomosc do dostarczenia, dlugosc musi byc mniejsza od 2000 znakow
-	def send_msg(self, rcpt, msg, seq = 0, msg_class = 0x0004): #TODO: msg_class na enumy...
+	def send_msg(self, rcpt, msg, seq = 0, msg_class = GGMsgTypes.Msg):
 		assert type(rcpt) == types.IntType
 		assert type(msg) == types.StringType and len(msg) < 2000 #TODO: w dalszych iteracjach: obsluga richtextmsg
 		assert type(seq) == types.IntType
-		assert type(msg_class) == types.IntType #TODO: and msg_class in GGMsgClasses
+		assert type(msg_class) in GGMsgTypes
 		
 		if not self.__logged:
 			raise GGNotLogged
@@ -190,4 +199,24 @@ class GGSession(EventsList):
 			out_packet.send(self.__connection)
 	
 	
-	
+	def send_contacts_list(self):
+		"""
+		Wysyla do serwera nasza liste kontaktow w celu otrzymania statusow.
+		Powinno byc uzyte zaraz po zalogowaniu sie do serwera.
+		UWAGA: To nie jest eksport listy kontaktow do serwera!
+		"""
+		if not self.__logged:
+			raise GGNotLogged
+		
+		uin_type_list = [] # [(uin, type), (uin, type), ...]
+		for contact in self.contacts_list:
+			list.append((contact.uin, contact.type))
+		sub_lists = Helpers.split_list(uin_type_list, 400)
+		
+		with self.__lock:
+			for l in sub_lists[:-1]: #zostawiamy ostatnia podliste
+				out_packet = GGNotifyFirst(l)
+				out_packet.send(self.__connection)
+			# zostala juz ostatnia lista do wyslania
+			out_packet = GGNotifyLast(sub_lists[-1])
+			out_packet.send(self.__connection)

@@ -169,3 +169,15 @@ def ip_to_int32(ip):
 	assert type(ip) == types.StringType
 	return struct.unpack("<I", socket.inet_aton(ip))[0]
 
+def split_list(xs, size):
+	"""
+	Dzieli liste 'xs' na podlisty. Kazda z nich, oprocz ostatniej, ma dlugosc 'size'.
+	Ostatnia podlista ma dlugosc <= 'size'.
+	Returns: liste podlist
+	"""
+	import math
+	ret = []
+	ret_size = int(math.ceil(len(xs)/float(size)))
+	for i in range(ret_size):
+		ret.append(xs[(i*size):((i+1)*size)])
+	return ret
