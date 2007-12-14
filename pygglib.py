@@ -22,6 +22,7 @@ from Helpers import *
 from GGConstans import *
 from Networking import Connection
 from Exceptions import *
+from Contacts import *
 from HTTPServices import *
 import types
 import threading
@@ -41,11 +42,12 @@ class GGSession(EventsList):
 		#\param initial_status           poczatkowy status dostepnosci
 		#\param initial_description     poczatkowy opis 
 		#
-	def __init__(self, uin, password, initial_status = GGStatuses.Avail, initial_description = ''):
+	def __init__(self, uin, password, initial_status = GGStatuses.Avail, initial_description = '', contacts_list = None):
 		assert type(uin) == types.IntType
 		assert type(password) == types.StringType
 		assert initial_status in GGStatuses
 		assert type(initial_description) == types.StringType and len(initial_description) <= 70
+		assert type(contacts_list) == ContactsList
 		
 		EventsList.__init__(self, ['on_login_ok', 'on_login_failed', 'on_need_email', 'on_msg_recv', \
 								   'on_unknown_packet', 'on_send_msg_ack', 'on_notify_reply'])
@@ -53,6 +55,7 @@ class GGSession(EventsList):
 		self.__password = password
 		self.__status = initial_status
 		self.__description = initial_description
+		self.__contacts_list = contacts_list
 		
 		self.__local_ip = "127.0.0.1" 
 		self.__local_port = 1550
@@ -69,6 +72,7 @@ class GGSession(EventsList):
 		self.__events_thread = threading.Thread(target = self.__events_loop)
 	
 		self.__lock = threading.RLock() #blokada dla watku
+		
 		
 	## Metoda powoduje uruchomienie listenera
 	#

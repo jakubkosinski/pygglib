@@ -19,3 +19,6 @@ class GGServerNotOperating(GGException):
 	
 class GGBadTokenVal(GGException):
 	pass
+
+class GGNotInContactsList(GGException):
+	pass
