@@ -26,8 +26,9 @@ GGStatuses = Enum({
 # Okresla jak traktujemy dany nr gg
 #
 GGUserTypes = Enum({
-	"Buddy":0x01, #Kazdy uzytkownik dodany do listy kontaktow
+	"Offline":0x01, #Kazdy uzytkownik dodany do listy kontaktow
 	"Friend":0x02, #Uzytkownik, dla ktorego jestesmy widoczni w trybie "tylko dla przyjaciol"
+	"Normal":0x03,
 	"Blocked":0x04 #Uzytkownik, ktorego wiadomosci nie chcemy otrzymywac
 	})
 	

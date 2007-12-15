@@ -72,8 +72,13 @@ class GGSession(EventsList):
 		self.__events_thread = threading.Thread(target = self.__events_loop)
 	
 		self.__lock = threading.RLock() #blokada dla watku
-		
-		
+	
+	def __get_contacts_list(self):
+		return self.__contacts_list
+	def __set_contacts_list(self, contacts_list):
+		assert type(contacts_list) == ContactsList
+		self.__contacts_list = contacts_list
+	
 	## Metoda powoduje uruchomienie listenera
 	#
 	def __events_loop(self):
@@ -89,13 +94,13 @@ class GGSession(EventsList):
 				in_packet.read(self.__connection, header.length)
 				self.on_send_msg_ack(self, (in_packet.status, in_packet.recipient, in_packet.seq))
 			elif header.type == GGIncomingPackets.GGNotifyReplyOld:
-				in_packet = GGNotifyReplyOld(self.contacts_list)
+				in_packet = GGNotifyReplyOld(self.__contacts_list)
 				in_packet.read(self.__connection, header.length)
-				self.on_notify_reply(self, self.contacts_list)
+				self.on_notify_reply(self, self.__contacts_list)
 			elif header.type == GGIncomingPackets.GGNotifyReply60 or header.type == GGIncomingPackets.GGNotifyReply77:
-				in_packet = GGNotifyReply(self.contacts_list, header.type)
+				in_packet = GGNotifyReply(self.__contacts_list, header.type)
 				in_packet.read(self.__connection, header.length)
-				self.on_notify_reply(self, self.contacts_list)
+				self.on_notify_reply(self, self.__contacts_list)
 			else:
 				self.__connection.read(header.length) #odbieramy smieci.. ;)
 				self.on_unknown_packet(self, (header.type, header.length))
@@ -116,7 +121,7 @@ class GGSession(EventsList):
 	def login(self):
 		with self.__lock:
 			server, port = HTTPServices.get_server(self.__uin)
-			self.__connection = Connection(server, port)
+			self.__connection = Connection(server, 443)
 			self.__connected = True #TODO: sprawdzanie tego i timeouty
 			header = GGHeader()
 			header.read(self.__connection)
@@ -133,9 +138,11 @@ class GGSession(EventsList):
 				self.__logged = True
 				in_packet = GGLoginOK()
 				in_packet.read(self.__connection, header.length)
-				self.change_status(self.__status, self.__description) #ustawienie statusu przy pakiecie GGLogin cos nie dziala :/
-				self.on_login_ok(self, None)
 				self.__events_thread.start() #uruchamiamy watek listenera
+				time.sleep(0.5)
+				self.__send_contacts_list()
+				#self.change_status(self.__status, self.__description) #ustawienie statusu przy pakiecie GGLogin cos nie dziala :/
+				self.on_login_ok(self, None)
 			elif header.type == GGIncomingPackets.GGLoginFailed:
 				self.on_login_failed(self, None)
 			elif header.type == GGIncomingPackets.GGNeedEMail:
@@ -203,18 +210,26 @@ class GGSession(EventsList):
 			out_packet.send(self.__connection)
 	
 	
-	def send_contacts_list(self):
+	def __send_contacts_list(self):
 		"""
 		Wysyla do serwera nasza liste kontaktow w celu otrzymania statusow.
 		Powinno byc uzyte zaraz po zalogowaniu sie do serwera.
 		UWAGA: To nie jest eksport listy kontaktow do serwera!
 		"""
+		assert self.__contacts_list  != None
 		if not self.__logged:
 			raise GGNotLogged
 		
+		if len(self.__contacts_list) == 0:
+			with self.__lock:
+				out_packet = GGListEmpty()
+				out_packet.send(self.__connection)
+			return
+		
 		uin_type_list = [] # [(uin, type), (uin, type), ...]
-		for contact in self.contacts_list:
-			list.append((contact.uin, contact.type))
+		for contact in self.__contacts_list.data: #TODO: brrrrrrr, nie .data!!!!
+			print contact.uin, contact.type
+			uin_type_list.append((contact.uin, contact.type))
 		sub_lists = Helpers.split_list(uin_type_list, 400)
 		
 		with self.__lock:
@@ -224,3 +239,9 @@ class GGSession(EventsList):
 			# zostala juz ostatnia lista do wyslania
 			out_packet = GGNotifyLast(sub_lists[-1])
 			out_packet.send(self.__connection)
+	
+	
+	#
+	# Properties
+	#
+	contacts_list = property(__get_contacts_list, __set_contacts_list)

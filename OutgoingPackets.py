@@ -10,6 +10,7 @@ import sys
 import struct
 from HeaderPacket import GGHeader
 from Networking import Connection
+from GGConstans import *
 import Helpers
 from Helpers import Enum
 
@@ -73,14 +74,15 @@ class GGLogin(GGOutgoingPacket):
 		self.external_port = external_port
 		self.image_size = image_size
 		self.time = time
-		self.version = 0x27 # GG 7.0
+		self.version = 0x2a # GG 7.7
 
 	def send(self, connection):
 		assert type(connection) == Connection
 		
+		
 		"""
-		#data = struct.pack("<IBIIIBIHIHBB%dsI" % (len(self.description) + 1),
-		data = struct.pack("<IB64sIIBIHIHBB%dsI" % (len(self.description) + 1),
+		data = struct.pack("<IBIIIBIHIHBB%dsI" % (len(self.description) + 1),
+		#data = struct.pack("<IB64sIIBIHIHBB%dsI" % (len(self.description) + 1),
 			self.uin, 
 			0x01, 
 			Helpers.gg_login_hash(self.password, self.seed), 
@@ -96,20 +98,20 @@ class GGLogin(GGOutgoingPacket):
 			self.description,
 			self.time)
 
-		#connection.send(repr(GGHeader(GGOutgoingPackets.GGLogin, len(data))) + data)
+		connection.send(repr(GGHeader(GGOutgoingPackets.GGLogin, len(data))) + data)
 		"""
 		data = struct.pack("<IIIIBIhIhBB%dsI" % (len(self.description) + 1),
 			self.uin, Helpers.gg_login_hash(self.password, self.seed), self.status, self.version, 0x00,
 			Helpers.ip_to_int32(self.local_ip), self.local_port, Helpers.ip_to_int32(self.external_ip), self.external_port,
 			self.image_size, 0xbe, self.description, self.time)
-
+		
 		connection.send(repr(GGHeader(GGOutgoingPackets.GGLogin60, len(data))) + data)
 
 class GGNewStatus(GGOutgoingPacket):
 	"""
 	Pakiet ten wysylamy do serwera, zeby zmienic status
 	"""
-	def __init__(self, status, description = '', time = 0):
+	def __init__(self, status, description = '', time = None):
 		"""
 		status - status (GGStatus)
 		description - opis statusu (string)
@@ -117,7 +119,7 @@ class GGNewStatus(GGOutgoingPacket):
 		"""
 		assert type(status) == types.IntType
 		assert type(description) == types.StringType and len(description) <= 70
-		assert type(time) == types.IntType or type(time) == types.LongTime
+		#assert type(time) == types.IntType or type(time) == types.LongTime
 		
 		self.status = status
 		self.description = description
@@ -125,8 +127,13 @@ class GGNewStatus(GGOutgoingPacket):
 
 	def send(self, connection):
 		assert type(connection) == Connection
-		
-		data = struct.pack("<I%dsI" % (len(self.description) + 1), self.status, self.description, self.time)
+		if self.status == GGStatuses.Avail or self.status == GGStatuses.NotAvail or self.status == GGStatuses.Busy or self.status == GGStatuses.Invisible or self.status == GGStatuses.Blocked:
+			data = struct.pack("<I", self.status)
+		else: # status z opisem
+			if time == None: #bez czasu
+				data = struct.pack("<I%ds" % (len(self.description),), self.status, self.description) 
+			else:
+				data = struct.pack("<I%dsBI" % (len(self.description), ), self.status, self.description, 0x00, self.time)
 		connection.send(repr(GGHeader(GGOutgoingPackets.GGNewStatus, len(data))) + data)
 		
 class GGSendMsg(GGOutgoingPacket):
@@ -202,7 +209,7 @@ class GGNotifyFirst(GGOutgoingPacket):
 			data += struct.pack("<IB", notify[0], notify[1])
 		connection.send(repr(GGHeader(GGOutgoingPackets.GGNotifyFirst, len(data))) + data)
 
-class GGNotifyLast(GGOutgointPacket):
+class GGNotifyLast(GGOutgoingPacket):
 	"""
 	Ostatnie wpisy listy kontaktow (maksymalnie 400), ktore wysylamy zaraz po podlaczaniu. Jesli lista kontaktow
 	zawiera <= 400 kontaktow to wysylamy jedynie ten pakiet. Jesli wiecej, to wysylamy najpierw pakiety GGNotifyFirst,
@@ -210,13 +217,13 @@ class GGNotifyLast(GGOutgointPacket):
 	"""
 	def __init__(self, gg_notify_list):
 		"""
-		gg_notify_list list to lista krotek postaci: (uin, typ_uzytkownika)
+		gg_notify_list to lista krotek postaci: (uin, typ_uzytkownika)
 		"""
 		assert type(gg_notify_list) == types.ListType
 		for notify in gg_notify_list:
 			assert type(notify) == types.TupleType
 			assert len(notify) == 2
-			assert type(notify[0]) == types.IntType and type(notify([1])) in GGUserTypes
+			#assert type(notify[0]) == types.IntType and type(notify[1]) in GGUserTypes
 		assert len(gg_notify_list) <= 400 #TODO: <= czy < ??? W protokole jest niejasno napisane... :(
 		
 		self.__gg_notify_list = gg_notify_list

@@ -6,6 +6,7 @@
 # $Id$
 
 import struct
+from Contacts import *
 from Helpers import Enum
 
 GGIncomingPackets = Enum({
@@ -97,14 +98,14 @@ class GGNotifyReplyOld(GGIncomingPacket):
 	"""
 	___Pakiet dla starych wersji klientow___
 	Odpowiedz serwera na pakiety GGNotifyFirst i GGNotifyLast.
-	Zawiera listê struktur postaci:
+	Zawiera liste struktur postaci:
 		int uin -- numer
 		char status -- status danej osoby
 		int remote_ip -- adres ip delikwenta
-		short remote_port -- port, na którym s³ucha klient
+		short remote_port -- port, na ktorym slucha klient
 		int version -- wersja klienta
-		string description -- opis, nie musi wyst¹piæ
-		int time -- czas, nie musi wyst¹piæ
+		string description -- opis, nie musi wystapic
+		int time -- czas, nie musi wystapic
 	"""
 	def __init__(self, contacts):
 		assert type(contacts) == ContactsList
@@ -117,7 +118,7 @@ class GGNotifyReplyOld(GGIncomingPacket):
 class GGNotifyReply(GGIncomingPacket):
 	"""
 	Odpowiedz serwera na pakiety GGNotifyFirst i GGNotifyLast.
-	Zawiera listê struktur postaci:
+	Zawiera liste struktur postaci:
 		int uin -- numer
 		char status -- status danej osoby
 		int ip -- adres ip osoby
@@ -132,20 +133,21 @@ class GGNotifyReply(GGIncomingPacket):
 		"""
 		assert type(contacts) == ContactsList
 		assert notify_reply_version == GGIncomingPackets.GGNotifyReply60 or notify_reply_version == GGIncomingPackets.GGNotifyReply77
-		self.contacts = contacts
+		self.notify_reply_version = notify_reply_version
+		self.__contacts = contacts
 	
-	def read(selc, connection, size):
-		dummy_size = notify_reply_version == GGIncomingPackets.GGNotifyReply60 and 1 or 4
+	def read(self, connection, size):
+		dummy_size = (self.notify_reply_version == GGIncomingPackets.GGNotifyReply60 and 1 or 4)
 		
 		count = 0 #ile juz odebralismy bajtow
 		finish = False #czy juz konczymy odbieranie
 		
 		while not finish:
-			tuple = struct.unpack("<IBIHBB%dx" % (dummy_size,), connection.read(13 + dummy_size))
+			tuple = struct.unpack("<IBIHBB%dx" % (4,), connection.read(13 + 4))
 			count += 13 + dummy_size
 			status = tuple[1]
-			
-			self.__contacts[uin].uin = tuple[0] & 0xffffff00
+			uin = (tuple[0] & 0x00ffffff)#bierzemy UIN, maske odrzucamy
+			self.__contacts[uin].uin = uin
 			self.__contacts[uin].status = tuple[1]
 			self.__contacts[uin].ip = tuple[2]
 			self.__contacts[uin].port = tuple[3]
@@ -153,28 +155,32 @@ class GGNotifyReply(GGIncomingPacket):
 			self.__contacts[uin].image_size = tuple[5]
 			
 			#czy status jest opisowy? Jesli nie, to znaczy, ze dalej zaczyna sie info o kolejnym numerku
-			if status == GGStatuses.AvailDesc or status == GGStatuses.NotAvailDescr or status == GGStatuses.BusyDescr or status == GGStatuses.InvisibleDescr:
+			if status == GGStatuses.AvailDescr or status == GGStatuses.NotAvailDescr or status == GGStatuses.BusyDescr or status == GGStatuses.InvisibleDescr:
 				# zostala jeszcze na pewno dlugosc opisu i opis (moze tez czas)
 				tuple = struct.unpack("<B", connection.read(1))
 				count += 1
 				desc_size = tuple[0]
-				tuple = struct.unpack("<%ds" % (desc_size - 4), connection.read(desc_size - 4)) 	#bo zaraz sprawdzimy czy ostatnim bajtem w tuple[0] jest 0x00.
+				if desc_size <=4:
+					tuple = struct.unpack("<%ds" % (desc_size,), connection.read(desc_size))
+					self.__contacts[uin].description = tuple[0]
+					count += desc_size
+				else:
+					tuple = struct.unpack("<%ds" % ((desc_size - 4),), connection.read(desc_size - 4)) 	#bo zaraz sprawdzimy czy ostatnim bajtem w tuple[0] jest 0x00.
+					count += desc_size - 4
 																									#jesli tak, to znaczy, ze na koncu jest czas. Jesli nie, to znaczy, ze
 																									#dalsze 4 bajty, to dalsza czesc opisu
-				count += desc_size - 4
-				description = tuple[0]	
-				if ord(description[len(description)]) == 0x00: # 4 kolejne bajty, to czas
-					description.replace(chr(0x00), '') #usuwamy 0x00
-					tuple = struct.unpack("<I", connection.read(4))
-					count += 4
-					self.__contacts[uin].description = description
-					self.__contacts[uin].return_time = tuple[0]
-				else: #4 kolejne bajty, to koncowka opisu
-					tuple = struct.unpack("4s", connection.read(4))
-					count += 4
-					description += tuple[0]
-					self.__contacts[uin].description = description
+					description = tuple[0]	
+					if ord(description[len(description)-1]) == 0x00: # 4 kolejne bajty, to czas
+						description.replace(chr(0x00), '') #usuwamy 0x00
+						tuple = struct.unpack("<I", connection.read(4))
+						count += 4
+						self.__contacts[uin].description = description
+						self.__contacts[uin].return_time = tuple[0]
+					else: #4 kolejne bajty, to koncowka opisu
+						tuple = struct.unpack("4s", connection.read(4))
+						count += 4
+						description += tuple[0]
+						self.__contacts[uin].description = description
 			
 			if count >= size:
 				finish = True
-		
