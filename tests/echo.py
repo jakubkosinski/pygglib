@@ -41,6 +41,7 @@ if __name__ == "__main__":
 	session.register('on_unknown_packet', print_unknown_packet)
 	session.register('on_send_msg_ack', print_msg_ack)
 	session.login()
+	session.change_status(GGStatuses.AvailDescr, "pygglib")
 	time.sleep(60)
 	session.logout()
 		

@@ -47,7 +47,7 @@ class GGSession(EventsList):
 		assert type(password) == types.StringType
 		assert initial_status in GGStatuses
 		assert type(initial_description) == types.StringType and len(initial_description) <= 70
-		assert type(contacts_list) == ContactsList
+		assert type(contacts_list) == ContactsList or contacts_list == None
 		
 		EventsList.__init__(self, ['on_login_ok', 'on_login_failed', 'on_need_email', 'on_msg_recv', \
 								   'on_unknown_packet', 'on_send_msg_ack', 'on_notify_reply'])
@@ -138,11 +138,11 @@ class GGSession(EventsList):
 				self.__logged = True
 				in_packet = GGLoginOK()
 				in_packet.read(self.__connection, header.length)
+				self.on_login_ok(self, None)
 				self.__events_thread.start() #uruchamiamy watek listenera
-				time.sleep(0.5)
+				time.sleep(0.5) #TODO: potrzebne to?
 				self.__send_contacts_list()
 				#self.change_status(self.__status, self.__description) #ustawienie statusu przy pakiecie GGLogin cos nie dziala :/
-				self.on_login_ok(self, None)
 			elif header.type == GGIncomingPackets.GGLoginFailed:
 				self.on_login_failed(self, None)
 			elif header.type == GGIncomingPackets.GGNeedEMail:
@@ -200,7 +200,7 @@ class GGSession(EventsList):
 		assert type(rcpt) == types.IntType
 		assert type(msg) == types.StringType and len(msg) < 2000 #TODO: w dalszych iteracjach: obsluga richtextmsg
 		assert type(seq) == types.IntType
-		assert type(msg_class) in GGMsgTypes
+		assert msg_class in GGMsgTypes
 		
 		if not self.__logged:
 			raise GGNotLogged
@@ -216,11 +216,11 @@ class GGSession(EventsList):
 		Powinno byc uzyte zaraz po zalogowaniu sie do serwera.
 		UWAGA: To nie jest eksport listy kontaktow do serwera!
 		"""
-		assert self.__contacts_list  != None
+		assert self.__contacts_list  == None or type(self.__contacts_list) == ContactsList
 		if not self.__logged:
 			raise GGNotLogged
 		
-		if len(self.__contacts_list) == 0:
+		if self.__contacts_list == None or len(self.__contacts_list) == 0:
 			with self.__lock:
 				out_packet = GGListEmpty()
 				out_packet.send(self.__connection)

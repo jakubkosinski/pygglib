@@ -130,7 +130,7 @@ class GGNewStatus(GGOutgoingPacket):
 		if self.status == GGStatuses.Avail or self.status == GGStatuses.NotAvail or self.status == GGStatuses.Busy or self.status == GGStatuses.Invisible or self.status == GGStatuses.Blocked:
 			data = struct.pack("<I", self.status)
 		else: # status z opisem
-			if time == None: #bez czasu
+			if self.time == None: #bez czasu
 				data = struct.pack("<I%ds" % (len(self.description),), self.status, self.description) 
 			else:
 				data = struct.pack("<I%dsBI" % (len(self.description), ), self.status, self.description, 0x00, self.time)
