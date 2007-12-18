@@ -184,3 +184,36 @@ class GGNotifyReply(GGIncomingPacket):
 			
 			if count >= size:
 				finish = True
+				
+class GGPubDir50Reply:
+	"""
+	Odpowiedz serwera na pakiet GGPubDir50Request o nastepujacej strukturze:
+		char reqtype    -- typ odpowiedzi
+		int seq      -- numer sekwencyjny
+		char[] reply -- wyniki wyszukiwania w formacie "parametr\0wartosc\0", poszczegolne osoby oddzielone sa pustym polem ("\0")
+	Przyklad odpowiedzi zawierajacej dwie osoby (znaki "\0" zamienione zostaly na znak "."):
+		FmNumber.12345.FmStatus.1.firstname.Adam.nickname.Janek.birthyear.1979.city.Wzdow..FmNumber.32123.FmStatus.5.
+		firstname.Ewa.nickname.Ewcia.birthyear.1982.city.Gdansk..nextstart.0.
+	Odpowiedz katalogu nie zawiera nazwisk oraz plci znalezionych osob.
+	"""
+	def __init__(self):
+		pass
+	
+	def read(self, connection, size):
+		structure = struct.unpack("<BI%ds" % (size - 5), connection.read(size))
+		self.reqtype = structure[0]
+		self.seq = structure[1]
+		self.reply = structure[2]
+		
+class GGDisconnecting:
+	"""
+	Pusty pakiet, ktory serwer wysyla, gdy chce nas rozlaczyc. Ma to miejsce,
+	gdy probowano polaczyc sie z nieprawidlowym haslem lub gdy rownoczesnie
+	polaczy sie drugi klient z tym samym numerem
+	"""
+	def __init__(self):
+		pass
+		
+	def read(self, connection, size):
+		connection.read(size)
+		

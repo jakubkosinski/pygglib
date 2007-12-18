@@ -42,3 +42,7 @@ if __name__ == "__main__":
 	print "Podaj email rejestrowanego konta:"
 	email = raw_input()
 	uin = register_account(pwd,email)
+	print "Czy usunac konto? [t/n]"
+	op = raw_input()
+	if op == 't' or op == 'T':
+		delete_account(uin,pwd)

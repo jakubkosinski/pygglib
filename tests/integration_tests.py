@@ -2,6 +2,7 @@ import sys
 # sys.path.append("../") # - dla linuksa
 sys.path.append("..\\..\\src") # - dla windowsa
 from pygglib import GGSession
+from Helpers import *
 from GGConstans import *
 import time
 
@@ -26,6 +27,14 @@ def on_unknown_packet_event_handler(sender, args):
 	
 def on_send_msg_ack_event_handler(sender, args):
 	print 'msg_send_ack received: status: %s, recipient: %d, seq: %d' % (GGMsgStatus.reverse_lookup(args[0]), args[1], args[2])
+	
+def on_pubdir_recv_event_handler(sender, args):
+	print 'PubDir type', args[0]
+	print 'PubDir sequence numer', args[1]
+	entries = args[2].split("\0\0")
+	for item in entries:
+		print request_to_dict(item)
+		
 
 if __name__ == "__main__":
 	session = GGSession(uin = 11327271, password = 'eto2007')
@@ -33,11 +42,13 @@ if __name__ == "__main__":
 	session.register('on_msg_recv', msg_recv_event_handler)
 	session.register('on_unknown_packet', on_unknown_packet_event_handler)
 	session.register('on_send_msg_ack', on_send_msg_ack_event_handler)
+	session.register('on_pubdir_recv', on_pubdir_recv_event_handler)
 	session.login()
+	session.pubdir_request({'FmNumber':1308535})
 	time.sleep(5)
-	session.send_msg(3993939, 'msg1')
+	session.send_msg(1308535, 'msg1')
 	time.sleep(5)
-	session.send_msg(3993939, 'msg2')
+	session.send_msg(1308535, 'msg2')
 	time.sleep(5)
 	print 'Changing status...'
 	session.change_status(GGStatuses.AvailDescr, "pygglib")

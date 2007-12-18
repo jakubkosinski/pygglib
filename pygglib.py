@@ -47,10 +47,9 @@ class GGSession(EventsList):
 		assert type(password) == types.StringType
 		assert initial_status in GGStatuses
 		assert type(initial_description) == types.StringType and len(initial_description) <= 70
-		assert type(contacts_list) == ContactsList or contacts_list == None
-		
+		assert type(contacts_list) == ContactsList or contacts_list == None		
 		EventsList.__init__(self, ['on_login_ok', 'on_login_failed', 'on_need_email', 'on_msg_recv', \
-								   'on_unknown_packet', 'on_send_msg_ack', 'on_notify_reply'])
+								   'on_unknown_packet', 'on_send_msg_ack', 'on_notify_reply', 'on_pubdir_recv'])
 		self.__uin = uin
 		self.__password = password
 		self.__status = initial_status
@@ -101,6 +100,14 @@ class GGSession(EventsList):
 				in_packet = GGNotifyReply(self.__contacts_list, header.type)
 				in_packet.read(self.__connection, header.length)
 				self.on_notify_reply(self, self.__contacts_list)
+			elif header.type == GGIncomingPackets.GGPubDir50Reply:
+				in_packet == GGPubDir50Reply()
+				in_packet.read(self.__connection, header.length)
+				self.on_pubdir_recv(self, (in_packet.type, in_packet.seq, in_packet.request))
+			elif header.type == GGIncomingPackets.GGDisconnecting:
+				in_packet == GGDisconnecting()
+				in_packet.read(self.__connection, header.length)
+				self.login() # po rozlaczeniu przez serwer laczymy sie ponownie
 			else:
 				self.__connection.read(header.length) #odbieramy smieci.. ;)
 				self.on_unknown_packet(self, (header.type, header.length))
@@ -209,6 +216,17 @@ class GGSession(EventsList):
 			out_packet = GGSendMsg(rcpt, msg, seq, msg_class)
 			out_packet.send(self.__connection)
 	
+	def pubdir_request(self, request, reqtype = GGPubDirTypes.Search):
+		assert type(request) == types.StringType or type(request) == types.DictType
+		assert type(reqtype) in GGPubDirTypes
+		
+		if not self.__logged:
+			raise GGNotLogged
+			
+		with self.__lock:
+			out_packet = GGPubDir50Request(request, reqtype)
+			out_packet.send(self.__connection)
+	
 	
 	def __send_contacts_list(self):
 		"""
@@ -217,6 +235,7 @@ class GGSession(EventsList):
 		UWAGA: To nie jest eksport listy kontaktow do serwera!
 		"""
 		assert self.__contacts_list  == None or type(self.__contacts_list) == ContactsList
+		
 		if not self.__logged:
 			raise GGNotLogged
 		

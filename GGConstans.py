@@ -67,5 +67,9 @@ GGNotifyTypes = Enum({
 	"NotifyLast":0x0010   # ostatnie 400 wpisow
 	})
 	
-
-	
+GGPubDirTypes = Enum({
+	"Write"       : 0x01,
+	"Read"        : 0x02,
+	"Search"      : 0x03,
+	"SearchReply" : 0x05
+	})

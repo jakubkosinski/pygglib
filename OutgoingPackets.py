@@ -5,6 +5,7 @@
 #
 # $Id$
 
+import time
 import types
 import sys
 import struct
@@ -235,4 +236,24 @@ class GGNotifyLast(GGOutgoingPacket):
 			data += struct.pack("<IB", notify[0], notify[1])
 		connection.send(repr(GGHeader(GGOutgoingPackets.GGNotifyLast, len(data))) + data)
 
+class GGPubDir50Request:
+	"""
+	Pakiet sluzacy do odpytywania katalogu publicznego
+	"""
+	def __init__(self, request, reqtype = GGPubDirTypes.Search):
+		assert type(request) == types.StringType or types.DictType
+		
+		if type(request) == types.StringType:
+			self.request = request
+		else:
+			self.request = Helpers.dict_to_request(request)
+		self.reqtype = reqtype
+		self.seq = int(time.time())
+		
+	def send(self, connection):
+		assert type(connection) == Connection
+		
+		data = struct.pack("<BI%ds" % (len(self.request) + 1), self.reqtype, self.seq, self.request)
+		connection.send(repr(GGHeader(GGOutgoingPackets.GGSendMsg, len(data))) + data)
+		
 	

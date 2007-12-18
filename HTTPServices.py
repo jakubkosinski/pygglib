@@ -125,7 +125,7 @@ class HTTPServices(object):
 		data = urllib.urlencode({'fmnumber' : fmnumber, 'fmpwd' : fmpwd, 'delete' : 1, 'pwd' : pwd, 'email' : 'deleteaccount@gadu-gadu.pl', 'tokenid' : tokenid, 'tokenval' : tokenval, 'code' : code})
 		
 		request = urllib2.Request(url, data)
-		request.add_header('User-Agent', __user_agent)
+		request.add_header('User-Agent', self.__user_agent)
 		
 		response = urllib2.urlopen(request)
 		text = response.read()

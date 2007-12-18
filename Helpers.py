@@ -181,3 +181,30 @@ def split_list(xs, size):
 	for i in range(ret_size):
 		ret.append(xs[(i*size):((i+1)*size)])
 	return ret
+
+def dict_to_request(hash):
+	"""
+	Zamienia slownik parametrow zapytania do katalogu publicznego na format rozpoznawany przez serwer Gadu-Gadu
+	"""
+	assert type(hash) == types.DictType
+	
+	request = ""
+	for x in hash:
+		request += str(x) + "\0" + str(hash[x]) + "\0"
+		
+	return request
+	
+def request_to_dict(request):
+	"""
+	Zamienia parametry zapytania do katalogu publicznego rozpoznawane przez serwer Gadu-Gadu na slownik postaci nazwa_parametru:wartosc
+	"""
+	assert type(request) == types.StringType
+	
+	list = request.split("\0")
+	tuples = []
+	i = 0
+	while i < len(list) - 1:
+		tuples.append((list[i],list[i+1]))
+		i += 2
+	return dict(tuples)
+	
