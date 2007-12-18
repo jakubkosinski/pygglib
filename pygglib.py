@@ -83,7 +83,10 @@ class GGSession(EventsList):
 	def __events_loop(self):
 		while self.__logged:
 			header = GGHeader()
-			header.read(self.__connection)
+			try: #TODO: yyyyy ugly ;)  (przy wylogowaniu wyjatek leci)
+				header.read(self.__connection)
+			except:
+				return
 			if header.type == GGIncomingPackets.GGRecvMsg:
 				in_packet = GGRecvMsg()
 				in_packet.read(self.__connection, header.length)
@@ -101,11 +104,11 @@ class GGSession(EventsList):
 				in_packet.read(self.__connection, header.length)
 				self.on_notify_reply(self, self.__contacts_list)
 			elif header.type == GGIncomingPackets.GGPubDir50Reply:
-				in_packet == GGPubDir50Reply()
+				in_packet = GGPubDir50Reply()
 				in_packet.read(self.__connection, header.length)
-				self.on_pubdir_recv(self, (in_packet.type, in_packet.seq, in_packet.request))
+				self.on_pubdir_recv(self, (in_packet.reqtype, in_packet.seq, in_packet.reply))
 			elif header.type == GGIncomingPackets.GGDisconnecting:
-				in_packet == GGDisconnecting()
+				in_packet = GGDisconnecting()
 				in_packet.read(self.__connection, header.length)
 				self.login() # po rozlaczeniu przez serwer laczymy sie ponownie
 			else:
@@ -218,7 +221,7 @@ class GGSession(EventsList):
 	
 	def pubdir_request(self, request, reqtype = GGPubDirTypes.Search):
 		assert type(request) == types.StringType or type(request) == types.DictType
-		assert type(reqtype) in GGPubDirTypes
+		assert reqtype in GGPubDirTypes
 		
 		if not self.__logged:
 			raise GGNotLogged

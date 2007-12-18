@@ -34,9 +34,14 @@ def on_pubdir_recv_event_handler(sender, args):
 	entries = args[2].split("\0\0")
 	for item in entries:
 		print request_to_dict(item)
+	print
 		
 
 if __name__ == "__main__":
+	if len(sys.argv) == 1:
+		uin = 3993939
+	else:
+		uin = int(sys.argv[1])
 	session = GGSession(uin = 11327271, password = 'eto2007')
 	session.register('on_login_ok', login_ok_event_handler)
 	session.register('on_msg_recv', msg_recv_event_handler)
@@ -46,9 +51,9 @@ if __name__ == "__main__":
 	session.login()
 	session.pubdir_request({'FmNumber':1308535})
 	time.sleep(5)
-	session.send_msg(1308535, 'msg1')
+	session.send_msg(uin, 'msg1')
 	time.sleep(5)
-	session.send_msg(1308535, 'msg2')
+	session.send_msg(uin, 'msg2')
 	time.sleep(5)
 	print 'Changing status...'
 	session.change_status(GGStatuses.AvailDescr, "pygglib")

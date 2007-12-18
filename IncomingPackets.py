@@ -143,7 +143,7 @@ class GGNotifyReply(GGIncomingPacket):
 		finish = False #czy juz konczymy odbieranie
 		
 		while not finish:
-			tuple = struct.unpack("<IBIHBB%dx" % (4,), connection.read(13 + 4))
+			tuple = struct.unpack("<IBIHBB%dx" % (dummy_size,), connection.read(13 + dummy_size))
 			count += 13 + dummy_size
 			status = tuple[1]
 			uin = (tuple[0] & 0x00ffffff)#bierzemy UIN, maske odrzucamy
@@ -185,7 +185,7 @@ class GGNotifyReply(GGIncomingPacket):
 			if count >= size:
 				finish = True
 				
-class GGPubDir50Reply:
+class GGPubDir50Reply(GGIncomingPacket):
 	"""
 	Odpowiedz serwera na pakiet GGPubDir50Request o nastepujacej strukturze:
 		char reqtype    -- typ odpowiedzi
@@ -205,7 +205,7 @@ class GGPubDir50Reply:
 		self.seq = structure[1]
 		self.reply = structure[2]
 		
-class GGDisconnecting:
+class GGDisconnecting(GGIncomingPacket):
 	"""
 	Pusty pakiet, ktory serwer wysyla, gdy chce nas rozlaczyc. Ma to miejsce,
 	gdy probowano polaczyc sie z nieprawidlowym haslem lub gdy rownoczesnie

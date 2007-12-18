@@ -75,7 +75,7 @@ class GGLogin(GGOutgoingPacket):
 		self.external_port = external_port
 		self.image_size = image_size
 		self.time = time
-		self.version = 0x2a # GG 7.7
+		self.version = 0x25 # GG 7.7
 
 	def send(self, connection):
 		assert type(connection) == Connection
@@ -241,7 +241,7 @@ class GGPubDir50Request:
 	Pakiet sluzacy do odpytywania katalogu publicznego
 	"""
 	def __init__(self, request, reqtype = GGPubDirTypes.Search):
-		assert type(request) == types.StringType or types.DictType
+		assert type(request) == types.StringType or  type(request) == types.DictType
 		
 		if type(request) == types.StringType:
 			self.request = request
@@ -254,6 +254,6 @@ class GGPubDir50Request:
 		assert type(connection) == Connection
 		
 		data = struct.pack("<BI%ds" % (len(self.request) + 1), self.reqtype, self.seq, self.request)
-		connection.send(repr(GGHeader(GGOutgoingPackets.GGSendMsg, len(data))) + data)
+		connection.send(repr(GGHeader(GGOutgoingPackets.GGPubDir50Request, len(data))) + data)
 		
 	
