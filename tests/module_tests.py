@@ -1,6 +1,9 @@
+import os
 import sys
-# sys.path.append("../") # - dla linuksa
-sys.path.append("..\\..\\src") # - dla windowsa
+if os.uname()[0] == 'Linux':
+	sys.path.append("../") # - dla linuksa
+else:
+	sys.path.append("..\\..\\src") # - dla windowsa
 from OutgoingPackets import *
 from HeaderPacket import GGHeader
 from IncomingPackets import *
