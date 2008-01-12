@@ -28,8 +28,9 @@ GGOutgoingPackets = Enum({
 	"GGLoginExt":0x0013, #Logowanie przed GG 6.0
 	"GGPubDir50Request":0x0014, #Zapytanie katalogu publicznego
 	"GGLogin60":0x0015, #Logowanie
-	"GGUserlistRequest":0x0016, #Zapytanie listy kontaktow na serwerze
-	"GGLogin70":0x0019 #Logowanie
+	"GGUserListRequest":0x0016, #Zapytanie listy kontaktow na serwerze
+	"GGLogin70":0x0019, #Logowanie
+	"GGUserlistRequest":0x0016 #Wysylanie kontaktow do serwera Gadu-Gadu
 	})
 
 class GGOutgoingPacket(object):
@@ -236,7 +237,7 @@ class GGNotifyLast(GGOutgoingPacket):
 			data += struct.pack("<IB", notify[0], notify[1])
 		connection.send(repr(GGHeader(GGOutgoingPackets.GGNotifyLast, len(data))) + data)
 
-class GGPubDir50Request:
+class GGPubDir50Request(GGOutgoingPacket):
 	"""
 	Pakiet sluzacy do odpytywania katalogu publicznego
 	"""
@@ -256,4 +257,20 @@ class GGPubDir50Request:
 		data = struct.pack("<BI%ds" % (len(self.request) + 1), self.reqtype, self.seq, self.request)
 		connection.send(repr(GGHeader(GGOutgoingPackets.GGPubDir50Request, len(data))) + data)
 		
-	
+class GGUserListRequest(GGOutgoingPacket):
+	"""
+	Pakiet sluzacy do wysylania listy kontaktow na serwer Gadu-Gadu
+	TODO: poprawa, bo to chyba nie dziala
+	"""
+	def __init__(self, reqtype, request):
+		assert type(request) == types.StringType
+		assert reqtype in GGUserListTypes
+		
+		self.reqtype = reqtype
+		self.request = request
+		
+	def send(self, connection):
+		assert type(connection) == Connection
+		
+		data = struct.pack("<B%ds" % (len(self.request) + 1), self.reqtype, self.request)
+		connection.send(repr(GGHeader(GGOutgoingPackets.GGUserlistRequest, len(data))) + data)

@@ -21,7 +21,7 @@ def msg_recv_event_handler(sender, args):
 	print 'sender:', args[0]
 	print 'seq:', args[1]
 	print 'msg_class:', GGMsgTypes.reverse_lookup(args[3])
-	print 'messange:', args[4]
+	print 'message:', args[4]
 	print
 	
 def on_unknown_packet_event_handler(sender, args):
@@ -56,7 +56,7 @@ if __name__ == "__main__":
 	time.sleep(5)
 	session.send_msg(uin, 'msg1')
 	time.sleep(5)
-	session.send_msg(uin, 'msg2')
+	session.send_msg(uin, 'msg2', msg_class = GGMsgTypes.Chat)
 	time.sleep(5)
 	print 'Changing status...'
 	session.change_status(GGStatuses.AvailDescr, "pygglib")

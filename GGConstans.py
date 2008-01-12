@@ -73,3 +73,9 @@ GGPubDirTypes = Enum({
 	"Search"      : 0x03,
 	"SearchReply" : 0x05
 	})
+
+GGUserListTypes = Enum({
+	"Put"     : 0x00,
+	"PutMore" : 0x01,
+	"Get"     : 0x02
+	})

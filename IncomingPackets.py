@@ -217,3 +217,16 @@ class GGDisconnecting(GGIncomingPacket):
 	def read(self, connection, size):
 		connection.read(size)
 		
+class GGUserListReply(GGIncomingPacket):
+	"""
+	Odpowiedz serwera na pakiet GGUserListRequest
+	TODO: poprawki, bo ta metoda nie dziala dobrze (w przypadku, gdy request jest pusty, a moze sie tak zdarzyc)
+	"""
+	def __init__(self):
+		pass
+	
+	def read(self, connection, size):
+		structure = struct.unpack("<B%ds" % (size - 1), connection.read(size))
+		self.reqtype = structure[0]
+		self.request = structure[1]
+		
