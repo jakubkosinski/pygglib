@@ -9,6 +9,7 @@ import types
 import socket
 import struct
 import hashlib
+import re
 
 #============================
 # Enum
@@ -207,4 +208,65 @@ def request_to_dict(request):
 		tuples.append((list[i],list[i+1]))
 		i += 2
 	return dict(tuples)
+
+def pygglib_rtf_to_gg_rtf(rtf_msg):
+	"""
+	Konwertuje tekst z formatu pygglib richtext do formatu Gadu-Gadu richtext.
+		pygglib richtext: <b>Ala <i><u>ma</u></i></b><color red=123 green=143 blue=123> KOTA</color>
+		Gadu-Gadu richtext: /patrz opis protokolu Gadu-Gadu (http://ekg.chmurka.net/docs/protocol.html#ch1.6)
+	"""
+	plain_text = "" #czysty tekst, bez formatowania (GG richtext zaczyna sie od czystego tekstu)
+	format_string = "" #ciag formatujacy plain_text (patrz. opis protokolu)
+	
+	regexp = re.compile(r'<(/?(color|i|b|u)[^>]*)>')
+	colors_regexp = re.compile(r'color\s+red=(?P<red>[0-9]{1,3})\s+green=(?P<green>[0-9]{1,3})\s+blue=(?P<blue>[0-9]{1,3})')
+	
+	markups_length = 0 #laczna dlugosc wszystkich znacznikow (potrzebne do oznaczania pozycji formatowanego tekstu)
+	flags = 0x0
+	for format in regexp.finditer(rtf_msg):
+		markup = format.groups(0)[0]
+		markups_length += len(markup) + 2
+
+		colors_match = colors_regexp.match(markup)
+		if markup == 'b':
+			format_string += struct.pack('<HB', format.end(0) - markups_length, flags | 0x01)
+		elif markup == 'i':
+			format_string += struct.pack('<HB', format.end(0) - markups_length, flags | 0x02)
+		elif markup == 'u':
+			format_string += struct.pack('<HB', format.end(0) - markups_length, flags | 0x04)
+		elif colors_match is not None:
+			red = int(colors_match.group('red'))
+			green = int(colors_match.group('green'))
+			blue = int(colors_match.group('blue'))
+			format_string += struct.pack('<HBBBB', format.end(0) - markups_length, flags | 0x08, red, green, blue)
+			
+		elif markup == '/b':
+			format_string += struct.pack('<HB', format.end(0) - markups_length, flags ^ 0x01)
+		elif markup == '/i':
+			format_string += struct.pack('<HB', format.end(0) - markups_length, flags ^ 0x02)
+		elif markup == '/u':
+			format_string += struct.pack('<HB', format.end(0) - markups_length, flags ^ 0x04)
+		elif markup == '/color':
+			format_string += struct.pack('<HB', format.end(0) - markups_length, flags ^ 0x08)
+		else:
+			pass
+	
+	plain_text = re.sub(r'</?(color|i|b|u)[^>]*>', '', rtf_msg) #usuwamy znaczniki formatowania
+	return struct.pack('<%dsBH%ds' % (len(plain_text) + 1, len(format_string)), plain_text, 0x02, len(format_string), format_string) #TODO: +1?????
+
+def gg_rtf_to_pygglib_rtf(rtf_msg):
+	"""
+	Konwertuje tekst z formatu Gadu-Gadu richtext do formatu pygglib richtext.
+		pygglib richtext: <b>Ala <i><u>ma</u></i></b><color red=123 green=143 blue=123> KOTA</color>
+		Gadu-Gadu richtext: /patrz opis protokolu Gadu-Gadu (http://ekg.chmurka.net/docs/protocol.html#ch1.6)
+	"""
+	try:
+		index = rtf_msg.index('\x02')
+	except ValueError:
+		return rtf_msg
+	plain_text, format_string = rtf_msg[:index], rtf_msg[index:]
+	#TODO: skonczyc....
+
+#if __name__ == "__main__":
+#	pygglib_rtf_to_gg_rtf("<b>Ala <i>ma</i></b><color red=123 green=143 blue=123> KOTA</color>")
 	

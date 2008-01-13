@@ -206,7 +206,7 @@ class GGSession(EventsList):
 	## Wyslanie wiadomosci gg
 	# \param rcpt nr gadu-gadu odbiorcy
 	#\param msg wiadomosc do dostarczenia, dlugosc musi byc mniejsza od 2000 znakow
-	def send_msg(self, rcpt, msg, seq = 0, msg_class = GGMsgTypes.Msg):
+	def send_msg(self, rcpt, msg, seq = 0, msg_class = GGMsgTypes.Msg, richtext = False):
 		assert type(rcpt) == types.IntType
 		assert type(msg) == types.StringType and len(msg) < 2000 #TODO: w dalszych iteracjach: obsluga richtextmsg
 		assert type(seq) == types.IntType
@@ -215,8 +215,13 @@ class GGSession(EventsList):
 		if not self.__logged:
 			raise GGNotLogged
 		
+		if richtext:
+			message = Helpers.pygglib_rtf_to_gg_rtf(msg)
+		else:
+			message = msg
+		
 		with self.__lock:
-			out_packet = GGSendMsg(rcpt, msg, seq, msg_class)
+			out_packet = GGSendMsg(rcpt, message, seq, msg_class)
 			out_packet.send(self.__connection)
 	
 	def pubdir_request(self, request, reqtype = GGPubDirTypes.Search):
