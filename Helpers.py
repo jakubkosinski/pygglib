@@ -47,9 +47,11 @@ class Enum(object):
 			if int(x) & int(value):
 				attributes.append(self.__reverse_lookup[x])
 		return ",".join(attributes)
-#		if not self.__reverse_lookup.has_key(value):
-#			raise AttributeError(value)
-#		return self.__reverse_lookup[value]
+	
+	def reverse_lookup_without_mask(self,value):
+		if not self.__reverse_lookup.has_key(value):
+			raise AttributeError(value)
+		return self.__reverse_lookup[value]
 	
 	def __contains__(self, value):
 		"""

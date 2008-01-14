@@ -61,6 +61,9 @@ class Contact(object):
 		assert type(params) == types.DictType
 		if params.has_key('request_string'):
 			self.name, self.surname, self.nick, self.shown_name, self.mobilephone, self.group, self.uin, self.email, self.available, self.available_source, self.message, self.message_source, self.hidden, self.telephone = params['request_string'].split(";")
+			self.uin = int(self.uin)
+			if self.shown_name == "":
+				self.shown_name = str(self.uin)
 			if self.available == "":
 				self.available = 0
 			else:
@@ -74,7 +77,7 @@ class Contact(object):
 			else:
 				self.hidden = int(self.hidden)
 		else:
-			self.uin = params['uin']
+			self.uin = int(params['uin'])
 			if params.has_key('name'):
 				self.name = params['name']
 			else:
@@ -132,7 +135,7 @@ class Contact(object):
 		return ";".join([self.name, self.surname, self.nick, self.shown_name, self.mobilephone, self.group, str(self.uin), self.email, str(self.available), self.available_source, str(self.message), self.message_source, str(self.hidden), self.telephone])
 	
 
-class ContactsList(object):
+class ContactsList(list):
 	"""
 	Klasa reprezentujaca liste kontaktow GG. Wpisy sa obiektami klast Contact. Konstruktor przyjmuje dwa rodzaje parametrow.
 	Pierwszy z nich to lista obiektow typu Contact, drugi to zawartosc pliku z kontaktami (wartosci oddzielone srednikami, opis w klasie Contact)

@@ -86,10 +86,7 @@ class GGSession(EventsList):
 	def __events_loop(self):
 		while self.__logged:
 			header = GGHeader()
-			try: #TODO: yyyyy ugly ;)  (przy wylogowaniu wyjatek leci)
-				header.read(self.__connection)
-			except:
-				return
+			header.read(self.__connection)
 			if header.type == GGIncomingPackets.GGRecvMsg:
 				in_packet = GGRecvMsg()
 				in_packet.read(self.__connection, header.length)
@@ -103,13 +100,13 @@ class GGSession(EventsList):
 			elif header.type == GGIncomingPackets.GGNotifyReplyOld:
 				in_packet = GGNotifyReplyOld(self.__contacts_list)
 				in_packet.read(self.__connection, header.length)
-				self.on_notify_reply(self, self.__contacts_list)
+				self.on_notify_reply(self, (self.__contacts_list,))
 
 			elif header.type == GGIncomingPackets.GGNotifyReply60 or header.type == GGIncomingPackets.GGNotifyReply77:
 				in_packet = GGNotifyReply(self.__contacts_list, header.type)
 				in_packet.read(self.__connection, header.length)
 				self.__contacts_list = in_packet.contacts
-				self.on_notify_reply(self, self.__contacts_list)
+				self.on_notify_reply(self, (self.__contacts_list,))
 
 			elif header.type == GGIncomingPackets.GGPubDir50Reply:
 				in_packet = GGPubDir50Reply()
@@ -142,7 +139,7 @@ class GGSession(EventsList):
 				self.__contacts_list[uin].return_time = in_packet.return_time
 				self.on_status_changed(self, (self.__contacts_list[uin],))
 
-			elif header.type == GGIncomngPackets.GGStatus60:
+			elif header.type == GGIncomingPackets.GGStatus60:
 				in_packet = GGStatus60()
 				in_packet.read(self.__connection, header.length)
 				uin = in_packet.uin
@@ -216,16 +213,22 @@ class GGSession(EventsList):
 		
 		self.change_status(description == '' and GGStatuses.NotAvail or GGStatuses.NotAvailDescr, description)
 		with self.__lock:
+			print "a"
 			self.__logged = False # przed join(), zeby zakonczyc watek
+			print "b"
 			self.__events_thread.join()
+			print "c"
 			self.__pinger.cancel()
+			print "d"
 			self.__connection.disconnect()
+			print "e"
 			self.__connected = False
-		
+		print "f"
+	
 	## Zmiana statusu i opisu
 	# \param status Taki staus dosteonosci zostanie ustawiony
 	#\param description Taki opis zostanie ustawiony
-	def change_status(self, status, description):
+	def change_status(self, status, description = ""):
 		assert type(status) == types.IntType and status in GGStatuses
 		assert type(description) == types.StringType and len(description) <= 70
 		
@@ -253,7 +256,7 @@ class GGSession(EventsList):
 	#\param msg wiadomosc do dostarczenia, dlugosc musi byc mniejsza od 2000 znakow
 	def send_msg(self, rcpt, msg, seq = 0, msg_class = GGMsgTypes.Msg, richtext = False):
 		assert type(rcpt) == types.IntType
-		assert type(msg) == types.StringType and len(msg) < 2000 #TODO: w dalszych iteracjach: obsluga richtextmsg
+		assert type(msg) == types.StringType and (not richtext and len(msg) < 2000)  #TODO: w dalszych iteracjach: obsluga richtextmsg
 		assert type(seq) == types.IntType
 		assert msg_class in GGMsgTypes
 		
@@ -390,8 +393,7 @@ class GGSession(EventsList):
 		
 		uin_type_list = [] # [(uin, type), (uin, type), ...]
 		for contact in self.__contacts_list.data: #TODO: brrrrrrr, nie .data!!!!
-			print contact.uin, contact.type
-			uin_type_list.append((contact.uin, contact.type))
+			uin_type_list.append((contact.uin, contact.user_type))
 		sub_lists = Helpers.split_list(uin_type_list, 400)
 		
 		with self.__lock:

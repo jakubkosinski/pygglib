@@ -55,7 +55,7 @@ if __name__ == "__main__":
         session.register('on_userlist_reply', on_userlist_reply)
         session.import_contacts_list(1, "kontakty.txt")
         clist = session.contacts_list
-        assert clist['12345678'].shown_name == "Ania"
+        assert clist[12345678].shown_name == "Ania"
 	session.login()
         session.export_contacts_list(0)
         time.sleep(5)

@@ -23,8 +23,8 @@ GGIncomingPackets = Enum({
 	"GGUserListReply":0x0010, #Odpowiedz listy kontaktow na serwerze
 	"GGNotifyReply60":0x0011, #Stan listy kontaktow
 	"GGNeedEMail":0x0014, #Logowanie powiodlo sie, ale powinnismy uzupelnic adres e-mail w katalogu publicznym
-	"GGNotifyReply77":0x0018 # Stan listy kontaktow (GG 7.0)
-	"GGStatus":0x0002 # Zmiana statusu uzytkownika z listy kontaktow
+	"GGNotifyReply77":0x0018, # Stan listy kontaktow (GG 7.0)
+	"GGStatus":0x0002, # Zmiana statusu uzytkownika z listy kontaktow
 	"GGStatus60":0x000f # jw. (wersja > 6)
 	})
 
@@ -301,7 +301,7 @@ class GGStatus60(GGIncomingPacket):
 			self.description = structure[6]
 			if len(self.description) <= 4:
 				self.return_time = 0
-			elif ord(structure[2][-5]) == 0:
+			elif ord(structure[6][-5]) == 0:
 				tuple = struct.unpack("<%dsxI" % (len(self.description) - 5), self.description)
 				self.description = tuple[0]
 				self.return_time = tuple[1]
