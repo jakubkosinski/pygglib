@@ -8,6 +8,7 @@
 import types
 from socket import *
 import time
+import struct
 
 class Connection(object): #TODO: obsluga timeoutow
 	def __init__(self, ip, port):
@@ -18,9 +19,16 @@ class Connection(object): #TODO: obsluga timeoutow
 		
 	def send(self, data):
 		self.__socket.send(data)
-	
-	def read(self, limit = 1024): #TODO: Petla do odbierania pakietow > 1024 bajty
-		return self.__socket.recv(limit)
+
+	def read(self, size = 1024): #TODO: Petla do odbierania pakietow > 1024 bajty
+		got = 0
+		packet = []
+		while got < size:
+			data = self.__socket.recv(size)
+			got += len(data)
+			packet.append(data)
+			
+		return ''.join(packet)
 	
 	def connect(self):
 		self.__socket.connect((self.__ip, self.__port))

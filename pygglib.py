@@ -56,6 +56,7 @@ class GGSession(EventsList):
 		self.__description = initial_description
 		self.__contacts_list = contacts_list
 		self.__importing = False # informuje, czy aktualnie importujemy liste kontaktow z serwera Gadu-Gadu
+		self.__contact_buffer = "" # bufor na importowane z serwera kontakty
 		
 		self.__local_ip = "127.0.0.1" 
 		self.__local_port = 1550
@@ -117,10 +118,13 @@ class GGSession(EventsList):
 				in_packet.read(self.__connection, header.length)
 				self.on_userlist_reply(self, (in_packet.reqtype, in_packet.request))
 				
-				if in_packet.reqtype == GGUserListReplyTypes.GetReply or in_packet.reqtype == GGUserListReplyTypes.GetMoreReply:
-					self.__make_contacts_list(in_packet.request)
+				if in_packet.reqtype == GGUserListReplyTypes.GetMoreReply:
+					self.__contact_buffer += in_packet.request
 				if in_packet.reqtype == GGUserListReplyTypes.GetReply:
 					self.__importing = False # zaimportowano cala liste
+					self.__contact_buffer += in_packet.request
+					self.__make_contacts_list(self.__contact_buffer)
+					self.__contact_buffer = "" # oprozniamy bufor
 					
 			else:
 				self.__connection.read(header.length) #odbieramy smieci.. ;)
@@ -255,7 +259,7 @@ class GGSession(EventsList):
 		"""
 		assert type(method) == types.IntType
 		while self.__importing == True:
-			pass
+			time.sleep(0.1)
 		if self.__contacts_list != None:
 			if method == 0:
 				if not self.__logged:
