@@ -37,6 +37,7 @@ class Contact(object):
 		* version - wersja klienta
 		* image_size - maksymalny rozmiar przyjmowanej grafiki
 		* description - opis (moze byc pusty)
+		* return_time - data powrotu uzytkownika (jesli nie ma, to = 0)
 		* user_type - typ uzytkownika (z klasy GGUserTypes)
 
 	Przyklady uzycia:
@@ -53,6 +54,7 @@ class Contact(object):
 	version = None
 	image_size = 0
 	description = ""
+	return_time = 0
 	user_type = GGUserTypes.Normal
 	
 	def __init__(self, params):

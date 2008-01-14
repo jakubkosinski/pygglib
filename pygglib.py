@@ -93,32 +93,37 @@ class GGSession(EventsList):
 				in_packet = GGRecvMsg()
 				in_packet.read(self.__connection, header.length)
 				self.on_msg_recv(self, (in_packet.sender, in_packet.seq, in_packet.time, in_packet.msg_class, in_packet.message))
+
 			elif header.type == GGIncomingPackets.GGSendMsgAck:
 				in_packet = GGSendMsgAck()
 				in_packet.read(self.__connection, header.length)
 				self.on_send_msg_ack(self, (in_packet.status, in_packet.recipient, in_packet.seq))
+
 			elif header.type == GGIncomingPackets.GGNotifyReplyOld:
 				in_packet = GGNotifyReplyOld(self.__contacts_list)
 				in_packet.read(self.__connection, header.length)
 				self.on_notify_reply(self, self.__contacts_list)
+
 			elif header.type == GGIncomingPackets.GGNotifyReply60 or header.type == GGIncomingPackets.GGNotifyReply77:
 				in_packet = GGNotifyReply(self.__contacts_list, header.type)
 				in_packet.read(self.__connection, header.length)
 				self.__contacts_list = in_packet.contacts
 				self.on_notify_reply(self, self.__contacts_list)
+
 			elif header.type == GGIncomingPackets.GGPubDir50Reply:
 				in_packet = GGPubDir50Reply()
 				in_packet.read(self.__connection, header.length)
 				self.on_pubdir_recv(self, (in_packet.reqtype, in_packet.seq, in_packet.reply))
+
 			elif header.type == GGIncomingPackets.GGDisconnecting:
 				in_packet = GGDisconnecting()
 				in_packet.read(self.__connection, header.length)
 				self.login() # po rozlaczeniu przez serwer laczymy sie ponownie
+
 			elif header.type == GGIncomingPackets.GGUserListReply:
 				in_packet = GGUserListReply()
 				in_packet.read(self.__connection, header.length)
 				self.on_userlist_reply(self, (in_packet.reqtype, in_packet.request))
-				
 				if in_packet.reqtype == GGUserListReplyTypes.GetMoreReply:
 					self.__contact_buffer += in_packet.request
 				if in_packet.reqtype == GGUserListReplyTypes.GetReply:
@@ -126,10 +131,31 @@ class GGSession(EventsList):
 					self.__contact_buffer += in_packet.request #... bo lista moze przyjsc w kilku pakietach
 					self.__make_contacts_list(self.__contact_buffer)
 					self.__contact_buffer = "" # oprozniamy bufor
-					
+
+			elif header.type == GGIncomingPackets.GGStatus:
+				in_packet = GGStatus()
+				in_packet.read(self.__connection, header.length)
+				uin = in_packet.uin
+				self.__contacts_list[uin].status = in_packet.status
+				self.__contacts_list[uin].description = in_packet.description
+				self.__contacts_list[uin].return_time = in_packet.return_time
+
+			elif header.type == GGIncomngPackets.GGStatus60:
+				in_packet = GGStatus60()
+				in_packet.read(self.__connection, header.length)
+				uin = in_packet.uin
+				self.__contacts_list[uin].status = in_packet.status
+				self.__contacts_list[uin].description = in_packet.description
+				self.__contacts_list[uin].return_time = in_packet.return_time
+				self.__contacts_list[uin].ip = in_packet.ip
+				self.__contacts_list[uin].port = in_packet.port
+				self.__contacts_list[uin].version = in_packet.version
+				self.__contacts_list[uin].image_size = in_packet.image_size
+
 			else:
 				self.__connection.read(header.length) #odbieramy smieci.. ;)
 				self.on_unknown_packet(self, (header.type, header.length))
+
 			time.sleep(0.1)
 	
 	
