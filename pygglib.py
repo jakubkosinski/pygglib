@@ -49,7 +49,8 @@ class GGSession(EventsList):
 		assert type(initial_description) == types.StringType and len(initial_description) <= 70
 		assert type(contacts_list) == ContactsList or contacts_list == None		
 		EventsList.__init__(self, ['on_login_ok', 'on_login_failed', 'on_need_email', 'on_msg_recv', \
-				'on_unknown_packet', 'on_send_msg_ack', 'on_notify_reply', 'on_pubdir_recv', 'on_userlist_reply'])
+				'on_unknown_packet', 'on_send_msg_ack', 'on_notify_reply', 'on_pubdir_recv', 'on_userlist_reply', \
+				'on_status_changed'])
 		self.__uin = uin
 		self.__password = password
 		self.__status = initial_status
@@ -139,6 +140,7 @@ class GGSession(EventsList):
 				self.__contacts_list[uin].status = in_packet.status
 				self.__contacts_list[uin].description = in_packet.description
 				self.__contacts_list[uin].return_time = in_packet.return_time
+				self.on_status_changed(self, (self.__contacts_list[uin],))
 
 			elif header.type == GGIncomngPackets.GGStatus60:
 				in_packet = GGStatus60()
@@ -151,6 +153,7 @@ class GGSession(EventsList):
 				self.__contacts_list[uin].port = in_packet.port
 				self.__contacts_list[uin].version = in_packet.version
 				self.__contacts_list[uin].image_size = in_packet.image_size
+				self.on_status_changed(self, (self.__contacts_list[uin],))
 
 			else:
 				self.__connection.read(header.length) #odbieramy smieci.. ;)
