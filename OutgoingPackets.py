@@ -234,7 +234,7 @@ class GGNotifyLast(GGOutgoingPacket):
 		assert type(connection) == Connection
 		data = ""
 		for notify in self.__gg_notify_list:
-			data += struct.pack("<IB", notify[0], notify[1])
+			data += struct.pack("<IB", int(notify[0]), notify[1])
 		connection.send(repr(GGHeader(GGOutgoingPackets.GGNotifyLast, len(data))) + data)
 
 class GGPubDir50Request(GGOutgoingPacket):

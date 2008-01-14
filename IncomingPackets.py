@@ -134,7 +134,10 @@ class GGNotifyReply(GGIncomingPacket):
 		assert type(contacts) == ContactsList
 		assert notify_reply_version == GGIncomingPackets.GGNotifyReply60 or notify_reply_version == GGIncomingPackets.GGNotifyReply77
 		self.notify_reply_version = notify_reply_version
-		self.__contacts = contacts
+		if contacts == None:
+			self.__contacts = ContactsList()
+		else:
+			self.__contacts = contacts
 	
 	def read(self, connection, size):
 		dummy_size = (self.notify_reply_version == GGIncomingPackets.GGNotifyReply60 and 1 or 4)
@@ -147,6 +150,8 @@ class GGNotifyReply(GGIncomingPacket):
 			count += 13 + dummy_size
 			status = tuple[1]
 			uin = (tuple[0] & 0x00ffffff)#bierzemy UIN, maske odrzucamy
+			if self.__contacts[uin] == None:
+				self.__contacts.add_contact(Contact({'uin':uin}))
 			self.__contacts[uin].uin = uin
 			self.__contacts[uin].status = tuple[1]
 			self.__contacts[uin].ip = tuple[2]
@@ -226,7 +231,11 @@ class GGUserListReply(GGIncomingPacket):
 		pass
 	
 	def read(self, connection, size):
-		structure = struct.unpack("<B%ds" % (size - 1), connection.read(size))
-		self.reqtype = structure[0]
-		self.request = structure[1]
+		if size == 1:
+			self.reqtype = struct.unpack("<B", connection.read(size))[0]
+			self.request = ""
+		else:
+			structure = struct.unpack("<B%ds" % (size - 1), connection.read(size))
+			self.reqtype = structure[0]
+			self.request = structure[1]
 		

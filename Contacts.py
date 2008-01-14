@@ -27,8 +27,6 @@ class Contact(object):
 	def __init__(self, params):
 		assert type(params) == types.DictType
 		if params.has_key('request_string'):
-			if params['request_string'] == '':
-				pass
 			self.name, self.surname, self.nick, self.shown_name, self.mobilephone, self.group, self.uin, self.email, self.available, self.available_source, self.message, self.message_source, self.hidden, self.telephone = params['request_string'].split(";")
 			if self.available == "":
 				self.available = 0
@@ -46,32 +44,56 @@ class Contact(object):
 			self.uin = params['uin']
 			if params.has_key('name'):
 				self.name = params['name']
+			else:
+				self.name = ""
 			if params.has_key('surname'):
 				self.surname = params['surname']
+			else:
+				self.surname = ""
 			if params.has_key('nick'):
 				self.nick = params['nick']
-			if params.has_key('shown_name'):
-				self.shown_name = str(repr(params['uin']))
 			else:
+				self.nick = ""
+			if params.has_key('shown_name'):
 				self.shown_name = params['shown_name']
+			else:
+				self.shown_name = str(repr(params['uin']))
 			if params.has_key('mobilephone'):
 				self.mobilephone = str(params['mobilephone'])
+			else:
+				self.mobilephone = ""
 			if params.has_key('group'):
 				self.group = params['group']
+			else:
+				self.group = ""
 			if params.has_key('email'):
 				self.email = params['email']
+			else:
+				self.email = ""
 			if params.has_key('available'):
 				self.available = int(params['available'])
+			else:
+				self.available = 0
 			if params.has_key('available_source'):
 				self.available_source = params['available_source']
+			else:
+				self.available_source = ""
 			if params.has_key('message'):
 				self.message = int(params['message'])
+			else:
+				self.message = 0
 			if params.has_key('message_source'):
 				self.message_source = params['message_source']
+			else:
+				self.message_source = ""
 			if params.has_key('hidden'):
 				self.hidden = int(params['hidden'])
+			else:
+				self.hidden = 0
 			if params.has_key('telephone'):
 				self.telephone = str(params['telephone'])
+			else:
+				self.telephone = ""
 		
 	def request_string(self):
 		return ";".join([self.name, self.surname, self.nick, self.shown_name, self.mobilephone, self.group, str(self.uin), self.email, str(self.available), self.available_source, str(self.message), self.message_source, str(self.hidden), self.telephone])
@@ -113,7 +135,7 @@ class ContactsList(list):
 	def __getitem__(self, uin):
 		index = self.__index_by_uin(uin)
 		if index == -1:
-			raise GGNotInContactsList(repr(uin))
+			return None
 		else:
 			return self.data[index]
 	

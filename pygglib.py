@@ -49,12 +49,13 @@ class GGSession(EventsList):
 		assert type(initial_description) == types.StringType and len(initial_description) <= 70
 		assert type(contacts_list) == ContactsList or contacts_list == None		
 		EventsList.__init__(self, ['on_login_ok', 'on_login_failed', 'on_need_email', 'on_msg_recv', \
-								   'on_unknown_packet', 'on_send_msg_ack', 'on_notify_reply', 'on_pubdir_recv'])
+				'on_unknown_packet', 'on_send_msg_ack', 'on_notify_reply', 'on_pubdir_recv', 'on_userlist_reply'])
 		self.__uin = uin
 		self.__password = password
 		self.__status = initial_status
 		self.__description = initial_description
 		self.__contacts_list = contacts_list
+		self.__importing = False # informuje, czy aktualnie importujemy liste kontaktow z serwera Gadu-Gadu
 		
 		self.__local_ip = "127.0.0.1" 
 		self.__local_port = 1550
@@ -111,6 +112,16 @@ class GGSession(EventsList):
 				in_packet = GGDisconnecting()
 				in_packet.read(self.__connection, header.length)
 				self.login() # po rozlaczeniu przez serwer laczymy sie ponownie
+			elif header.type == GGIncomingPackets.GGUserListReply:
+				in_packet = GGUserListReply()
+				in_packet.read(self.__connection, header.length)
+				self.on_userlist_reply(self, (in_packet.reqtype, in_packet.request))
+				
+				if in_packet.reqtype == GGUserListReplyTypes.GetReply or in_packet.reqtype == GGUserListReplyTypes.GetMoreReply:
+					self.__make_contacts_list(in_packet.request)
+				if in_packet.reqtype == GGUserListReplyTypes.GetReply:
+					self.__importing = False # zaimportowano cala liste
+					
 			else:
 				self.__connection.read(header.length) #odbieramy smieci.. ;)
 				self.on_unknown_packet(self, (header.type, header.length))
@@ -235,6 +246,63 @@ class GGSession(EventsList):
 			out_packet = GGPubDir50Request(request, reqtype)
 			out_packet.send(self.__connection)
 	
+	def export_contacts_list(self, method, filename = None):
+		"""
+		Eksportuje liste kontaktow do serwera lub do pliku. Metoda przekazywana jest jako parametr method:
+			0 - do serwera
+			1 - do pliku
+		Nazwa pliku przekazywana jest w opcjonalnym parametrze filename.
+		"""
+		assert type(method) == types.IntType
+		while self.__importing == True:
+			pass
+		if self.__contacts_list != None:
+			if method == 0:
+				if not self.__logged:
+					raise GGNotLogged
+				
+				sub_lists = Helpers.split_list(self.__contacts_list.export_request_string(), 2038)
+				with self.__lock:
+					out_packet = GGUserListRequest(GGUserListTypes.Put, sub_lists[0])
+					out_packet.send(self.__connection)
+					if len(sub_lists) > 1:
+						for l in sub_lists[1:len(sub_lists)]:
+							out_packet = GGUserListRequest(GGUserListTypes.PutMore, l)
+							out_packet.send(self.__connection)
+			elif method == 1:
+				assert type(filename) == types.StringType
+				request = self.__contacts_list.export_request_string()
+				file = open(filename, "w")
+				file.write(request)
+				file.close()
+			
+	def delete_contacts_from_server(self):
+		"""
+		Usuwa liste kontaktow z serwera Gadu-Gadu
+		"""
+		if not self.__logged:
+			raise GGNotLogged
+		
+		out_packet = GGUserListRequest(GGUserListTypes.Put, "")
+		out_packet.send(self.__connection)
+		
+	def import_contacts_list(self, method, filename = None):
+		"""
+		Wysyla zadanie importu listy z serwera (method = 0) lub pliku o nazwie filename (method = 1). Zaimportowana lista zapisywana jest w self.__contacts_list
+		"""
+		
+		if method == 0:
+			if not self.__logged:
+				raise GGNotLogged
+			out_packet = GGUserListRequest(GGUserListTypes.Get, "")
+			out_packet.send(self.__connection)
+			self.__importing = True
+		else:
+			assert type(filename) == types.StringType
+			file = open(filename, "r")
+			request = file.read()
+			file.close()
+			self.__make_contacts_list(request)
 	
 	def __send_contacts_list(self):
 		"""
@@ -267,7 +335,18 @@ class GGSession(EventsList):
 			out_packet = GGNotifyLast(sub_lists[-1])
 			out_packet.send(self.__connection)
 	
-	
+	def __make_contacts_list(self, request):
+		contacts = request.split("\n")
+		for contact in contacts:
+			if contact != '':
+				newcontact = Contact({'request_string':contact})
+				if self.__contacts_list == None:
+					self.__contacts_list = ContactsList()
+				if self.__contacts_list[newcontact.uin] == None:
+					self.__contacts_list.add_contact(Contact({'request_string':contact}))
+				else:
+					self.__contacts_list[newcontact.uin] = newcontact
+				
 	#
 	# Properties
 	#

@@ -79,3 +79,10 @@ GGUserListTypes = Enum({
 	"PutMore" : 0x01,
 	"Get"     : 0x02
 	})
+
+GGUserListReplyTypes = Enum({
+	"PutReply"     : 0x00,
+	"PutMoreReply" : 0x01,
+	"GetMoreReply" : 0x04,
+	"GetReply"     : 0x06
+	})
