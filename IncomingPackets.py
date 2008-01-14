@@ -189,6 +189,11 @@ class GGNotifyReply(GGIncomingPacket):
 			
 			if count >= size:
 				finish = True
+
+	def __get_contacts(self):
+		return self.__contacts
+	
+	contacts = property(__get_contacts)
 				
 class GGPubDir50Reply(GGIncomingPacket):
 	"""

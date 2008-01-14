@@ -104,6 +104,7 @@ class GGSession(EventsList):
 			elif header.type == GGIncomingPackets.GGNotifyReply60 or header.type == GGIncomingPackets.GGNotifyReply77:
 				in_packet = GGNotifyReply(self.__contacts_list, header.type)
 				in_packet.read(self.__connection, header.length)
+				self.__contacts_list = in_packet.contacts
 				self.on_notify_reply(self, self.__contacts_list)
 			elif header.type == GGIncomingPackets.GGPubDir50Reply:
 				in_packet = GGPubDir50Reply()
@@ -122,7 +123,7 @@ class GGSession(EventsList):
 					self.__contact_buffer += in_packet.request
 				if in_packet.reqtype == GGUserListReplyTypes.GetReply:
 					self.__importing = False # zaimportowano cala liste
-					self.__contact_buffer += in_packet.request
+					self.__contact_buffer += in_packet.request #... bo lista moze przyjsc w kilku pakietach
 					self.__make_contacts_list(self.__contact_buffer)
 					self.__contact_buffer = "" # oprozniamy bufor
 					
