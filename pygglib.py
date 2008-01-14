@@ -256,7 +256,7 @@ class GGSession(EventsList):
 	#\param msg wiadomosc do dostarczenia, dlugosc musi byc mniejsza od 2000 znakow
 	def send_msg(self, rcpt, msg, seq = 0, msg_class = GGMsgTypes.Msg, richtext = False):
 		assert type(rcpt) == types.IntType
-		assert type(msg) == types.StringType and (not richtext and len(msg) < 2000)  #TODO: w dalszych iteracjach: obsluga richtextmsg
+		assert type(msg) == types.StringType and ((not richtext and len(msg) < 2000) or (richtext))  #TODO: w dalszych iteracjach: obsluga richtextmsg
 		assert type(seq) == types.IntType
 		assert msg_class in GGMsgTypes
 		

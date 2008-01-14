@@ -28,5 +28,6 @@ if __name__ == "__main__":
 	session.change_status(GGStatuses.InvisibleDescr, "richtext_test.py")
 	session.send_msg(3993939, 'Zwykla wiadomosc')
 	session.send_msg(3993939, 'Richtext: <b>Ala <i><u>ma</u></i></b><color red=123 green=143 blue=123> KOTA</color>', richtext = True)
+	session.send_msg(3993939, 'Zwykla wiadomosc 2')
 	time.sleep(10)
 	session.logout()

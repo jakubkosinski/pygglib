@@ -257,7 +257,7 @@ def pygglib_rtf_to_gg_rtf(rtf_msg):
 			format_string += struct.pack('<HB', format.end(0) - markups_length, flags ^ 0x08)
 		else:
 			pass
-	
+	#TODO: cos nie tak jest :(
 	plain_text = re.sub(r'</?(color|i|b|u)[^>]*>', '', rtf_msg) #usuwamy znaczniki formatowania
 	return struct.pack('<%dsBH%ds' % (len(plain_text) + 1, len(format_string)), plain_text, 0x02, len(format_string), format_string) #TODO: +1?????
 
