@@ -183,7 +183,7 @@ class ContactsList(list):
 	def __index_by_uin(self, uin):
 		i = 0
 		for c in self.data:
-			if c.uin == uin:
+			if int(c.uin) == int(uin):
 				return i
 			i += 1
 		return -1

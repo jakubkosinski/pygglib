@@ -53,11 +53,11 @@ if __name__ == "__main__":
 	session.register('on_send_msg_ack', on_send_msg_ack_event_handler)
 	session.register('on_pubdir_recv', on_pubdir_recv_event_handler)
         session.register('on_userlist_reply', on_userlist_reply)
-        session.import_contacts_list(1, "kontakty.txt")
+        session.import_contacts_list("kontakty.txt")
         clist = session.contacts_list
         assert clist[12345678].shown_name == "Ania"
 	session.login()
-        session.export_contacts_list(0)
+        session.export_contacts_list()
         time.sleep(5)
 	session.logout()
 	x = raw_input()
