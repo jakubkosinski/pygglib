@@ -11,18 +11,49 @@ import types
 
 class Contact(object):
 	"""
-	Klasa reprezentujaca jedna osobe na liscie kontaktow
+	Klasa reprezentujaca pojedynczy kontakt. Zawiera nastepujace pola (wszystkie publiczne):
+		* uin - numer uzytkownika
+		* name - imie uzytkownika
+		* surname - nazwisko uzytkownika
+		* shown_name - nazwa wyswietlana
+		* nick - pseudonim uzytkownika
+		* mobilephone - numer telefonu komorkowego
+		* group - nazwa grupy
+		* email - adres email uzytkownika
+		* available - okresla dzwieki zwiazane z pojawieniem sie danej osoby i przyjmuje wartosci 0 (uzyte zostana ustawienia globalne), 
+			1 (dzwiek powiadomienia wylaczony) lub 2 (zostanie odtworzony plik okreslony w polu available_source)
+		* available_source - sciezka do pliku opisanego wyzej
+		* message - dziala podobnie do available, z tym, ze okresla dzwiek przychodzacej wiadomosci
+		* message_source - sciezka do dzwieku odgrywanego przy otrzymaniu wiadomosci (opis powyzej)
+		* hidden - okresla, czy bedziemy dostepni (0) czy niedostepni (1) dla danej osoby w trybie 'tylko dla znajomych'
+		* telephone - numer telefonu
+	Powyzsze pola mozemy przekazac w konstruktorze klase w formie slownika na dwa sposoby. Pierwszy z nich podaje slownik z kluczami 
+	o nazwach wlasciwosci (jedynym wymaganym kluczem jest 'uin') badz w formacie z slownika z kluczem 'request_string' o wartosci postaci:
+	name;surname;nick;shown_name;mobilephone;group;uin;email;available;available_source;message;message_source;hidden;telephone
+	Oprocz powyzszych pol, klasa posiada jeszcze pola modyfikowane przez klasy GGNotifyReply oraz GGStatus:
+		* status - status uzytkownika
+		* ip - adres IP uzytkownika do bezposrednich polaczen
+		* port - port do bezposrednich polaczen
+		* version - wersja klienta
+		* image_size - maksymalny rozmiar przyjmowanej grafiki
+		* description - opis (moze byc pusty)
+		* user_type - typ uzytkownika (z klasy GGUserTypes)
+
+	Przyklady uzycia:
+		1. Contact({'uin':12345, 'name':'Tola', 'shown_name':'Tola', 'hidden':1, 'message':2, 'message_source':'/home/user/message.wav'})
+		Utworzy kontakt o numerze 12345, nazwie 'Tola', wyswietlanej nazwie 'Tola', ukryty w trybie 'tylko dla znajomych' oraz ze zdefiniowanym
+		dzwiekiem odgrywanym podczas przychodzacej wiadomosci
+
+		2. Contact({'request_string':'Tola;;;Tola;;;12345;;0;1;/home/user/message.wav;1;'})
+		Utworzy kontakt jak wyzej.
 	"""
-	#
-	# Pola, o ktorych informacje dostajemy z serwera GG
-	#
-	status = GGStatuses.NotAvail #aktualny status uzytkownika
-	ip = 0 #ip DCC
-	port = 0 #port DCC
-	version = None #wersja klienta
-	image_size = 0 #maksymalna wielkosc obrazka
+	status = GGStatuses.NotAvail
+	ip = 0
+	port = 0
+	version = None
+	image_size = 0
 	description = ""
-	type = GGUserTypes.Normal
+	user_type = GGUserTypes.Normal
 	
 	def __init__(self, params):
 		assert type(params) == types.DictType
@@ -99,9 +130,12 @@ class Contact(object):
 		return ";".join([self.name, self.surname, self.nick, self.shown_name, self.mobilephone, self.group, str(self.uin), self.email, str(self.available), self.available_source, str(self.message), self.message_source, str(self.hidden), self.telephone])
 	
 
-class ContactsList(list):
+class ContactsList(object):
 	"""
-	Klasa reprezentujaca liste kontaktow GG
+	Klasa reprezentujaca liste kontaktow GG. Wpisy sa obiektami klast Contact. Konstruktor przyjmuje dwa rodzaje parametrow.
+	Pierwszy z nich to lista obiektow typu Contact, drugi to zawartosc pliku z kontaktami (wartosci oddzielone srednikami, opis w klasie Contact)
+	Dostep do kontaktow realizowany jest za pomoca uin, np. list['12345'] zwroci obiekt Contact o uin=12345 lub None w przypadku, gdy kontaktu
+	nie ma na liscie.
 	"""
 	def __init__(self, contacts = []):
 		assert type(contacts) == types.ListType or types.StringType
@@ -121,9 +155,26 @@ class ContactsList(list):
 			self.data = clist
 	
 	def add_contact(self, contact):
-		assert type(contact) == Contact
-		self.data.append(contact)
+		"""
+		Metoda dodajaca kontakt. Jako parametr przyjmuje obiekt klasy Contact lub napis w formacie pliku kontaktow Gadu-Gadu.
+		"""
+		if type(contact) == Contact:
+			self.data.append(contact)
+		elif type(contact) == types.StringType:
+			self.data.append(Contact(contact))
+		else:
+			raise AssertionError
 	
+	def remove_contact(self, uin):
+		"""
+		Metoda usuwajaca kontakt o numerze uin z listy. W przypadku, gdy na liscie nie ma kontaktu o podanym uin wyrzucany jest wyjatek KeyError.
+		"""
+		contact = self[uin]
+		if contact == None:
+			raise KeyValue(uin)
+		else:
+			self.data.remove(contact)
+
 	def __index_by_uin(self, uin):
 		i = 0
 		for c in self.data:
@@ -143,6 +194,9 @@ class ContactsList(list):
 		return len(self.data)
 	
 	def export_request_string(self):
+		"""
+		Metoda zwracajaca cala liste kontaktow w formacie pliku kontaktow Gadu-Gadu. Kazda linia reprezentuje jeden kontakt.
+		"""
 		return "\n".join(map(Contact.request_string, self.data))
 		
 	
