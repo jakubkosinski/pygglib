@@ -20,11 +20,12 @@ GGIncomingPackets = Enum({
 	"GGDisconnecting":0x000b, #Zerwanie polaczenia
 	"GGNotifyReplyOld":0x000c, #Stan listy kontaktow przed GG 6.0
 	"GGPubDir50Reply":0x000e, #Odpowiedz katalogu publicznego
-	"GGStatus60":0x000f, #Zmiana stanu
 	"GGUserListReply":0x0010, #Odpowiedz listy kontaktow na serwerze
 	"GGNotifyReply60":0x0011, #Stan listy kontaktow
 	"GGNeedEMail":0x0014, #Logowanie powiodlo sie, ale powinnismy uzupelnic adres e-mail w katalogu publicznym
 	"GGNotifyReply77":0x0018 # Stan listy kontaktow (GG 7.0)
+	"GGStatus":0x0002 # Zmiana statusu uzytkownika z listy kontaktow
+	"GGStatus60":0x000f # jw. (wersja > 6)
 	})
 
 class GGIncomingPacket(object):
@@ -186,6 +187,7 @@ class GGNotifyReply(GGIncomingPacket):
 						count += 4
 						description += tuple[0]
 						self.__contacts[uin].description = description
+						self.__contacts[uin].return_time = 0
 			
 			if count >= size:
 				finish = True
@@ -243,4 +245,64 @@ class GGUserListReply(GGIncomingPacket):
 			structure = struct.unpack("<B%ds" % (size - 1), connection.read(size))
 			self.reqtype = structure[0]
 			self.request = structure[1]
-		
+	
+class GGStatus(GGIncomingPacket):
+	"""
+	Pakiet informujacy o zmianie statusu uzytkownika na liscie kontaktow
+	"""
+	def __init__(self):
+		pass
+
+	def read(self, connection, size):
+		if size == 8:
+			structure = struct.unpack("<II", connection.read(size))
+			self.uin = structure[0] & 0x00ffffff # TODO: to moze byc niepotrzebne
+			self.status = structure[1]
+			self.description = ""
+			self.return_time = 0
+		else:
+			structure = struct.unpack("<II%ds" % (size - 8), connection.read(size))
+			self.uin = structure[0] & 0x00ffffff
+			self.status = structure[1]
+			self.description = structure[2]
+			if len(self.description) <= 4:
+				self.return_time = 0
+			elif ord(structure[2][-5]) == 0:
+				tuple = struct.unpack("<%dsxI" % (len(self.description) - 5), self.description)
+				self.description = tuple[0]
+				self.return_time = tuple[1]
+
+class GGStatus60(GGIncomingPacket):
+	"""
+	Pakiet informujacy o zmianie statusu uzytkownika na liscie kontaktow (dla wersji klienta > 6.0)
+	"""
+	def __init__(self):
+		pass
+
+	def read(self, connection, size):
+		if size == 14:
+			structure = struct.unpack("<IBIHBBx", connection.read(size))
+			self.uin = structure[0] & 0x00ffffff
+			self.status = structure[1]
+			self.ip = structure[2]
+			self.port = structure[3]
+			self.version = structure[4]
+			self.image_size = structure[5]
+			self.description = ""
+			self.return_time = 0
+		else:
+			structure = struct.unpack("<IBIHBBx%ds" % (size - 14), connection.read(size))
+			self.uin = structure[0] & 0x00ffffff
+			self.status = structure[1]
+			self.ip = structure[2]
+			self.port = structure[3]
+			self.version = structure[4]
+			self.image_size = structure[5]
+			self.description = structure[6]
+			if len(self.description) <= 4:
+				self.return_time = 0
+			elif ord(structure[2][-5]) == 0:
+				tuple = struct.unpack("<%dsxI" % (len(self.description) - 5), self.description)
+				self.description = tuple[0]
+				self.return_time = tuple[1]
+
