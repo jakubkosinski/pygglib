@@ -42,9 +42,14 @@ class Enum(object):
 			IncomingPackets.reverse_lookup(0x000a) - zwroci "GGRecvMsg"
 		Returns: klucz dla ktorego wartoscia jest 'value'
 		"""
-		if not self.__reverse_lookup.has_key(value):
-			raise AttributeError
-		return self.__reverse_lookup[value]
+		attributes = []
+		for x in self.__reverse_lookup.keys():
+			if int(x) & int(value):
+				attributes.append(self.__reverse_lookup[x])
+		return ",".join(attributes)
+#		if not self.__reverse_lookup.has_key(value):
+#			raise AttributeError(value)
+#		return self.__reverse_lookup[value]
 	
 	def __contains__(self, value):
 		"""

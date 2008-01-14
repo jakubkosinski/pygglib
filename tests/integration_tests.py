@@ -64,5 +64,5 @@ if __name__ == "__main__":
 	print 'Changing description...'
 	session.change_description("ala ma kota")
 	time.sleep(5)
-	session.logout()
-	x = input()
+	session.logout('Nie ma Henia')
+	x = raw_input()
