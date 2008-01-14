@@ -308,6 +308,39 @@ class GGSession(EventsList):
 			file.close()
 			self.__make_contacts_list(request)
 	
+	def add_contact(self, contact, user_type = 0x3, notify = True):
+		"""
+		Dodajemy kontakt 'contact' do listy kontaktow. Jesli jestesmy polaczeni z serwerem i notify == True to dodatkowo
+		powiadamiamy o tym fakcie serwer. Od tego momentu serwer bedzie nas informowal o statusie tego kontaktu.
+		"""
+		assert type(contact) == Contact
+		self.__contacts_list.add_contact(contact)
+		if self.__logged and notify:
+			out_packet = GGAddNotify(contact.uin, user_type)
+			out_packet.send(self.__connection)
+
+	def remove_contact(self, uin, notify = True):
+		"""
+		Usuwamy z listy kontaktow kontakt o numerze 'uin'. Jesli jestesmy polaczeni z serwerem i notify == True to dodatkowo
+		powiadamiamy o tym fakcie serwer. Od tego momentu serwer nie bedzie nas juz informowal o statusie tego kontaktu.
+		"""
+		self.__contacts_list.remove_contact(uin)
+		if self.__logged and notify:
+			out_packet = GGRemoveNotify(uin)
+			out_packet.send(self.__connection)
+	
+	def change_user_type(self, uin, user_type):
+		"""
+		Zmieniamy typ uzytkownika. user_type jest mapa wartosci z GGUserTypes.
+		Np., zeby zablokowac uzytkownka piszemy:
+			change_user_type(12454354, GGUserTypes.Blocked)
+		"""
+		if not self.__logged:
+			raise GGNotLogged
+
+		out_packet = GGRemoveNotify(uin, user_type)
+		out_packet.send(self.__connection)
+
 	def __send_contacts_list(self):
 		"""
 		Wysyla do serwera nasza liste kontaktow w celu otrzymania statusow.

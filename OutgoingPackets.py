@@ -237,6 +237,37 @@ class GGNotifyLast(GGOutgoingPacket):
 			data += struct.pack("<IB", int(notify[0]), notify[1])
 		connection.send(repr(GGHeader(GGOutgoingPackets.GGNotifyLast, len(data))) + data)
 
+class GGAddNotify(GGOutgoingPacket):
+	"""
+	Jesli w trakcie dzialania sesji chcemy kogos dodac do kontaktow, to wysylamy do serwera infomacje o nim.
+	Po wyslaniu tego pakietu, serwer bezdie nas informowal o zmianach statusu tego kontaktu.
+	"""
+	def __init__(self, uin, user_type = 0x3):
+		self.uin = uin
+		self.user_type = user_type
+	
+	def send(self, connection):
+		assert type(connection) == Connection
+		data = struct.pack("<IB", self.uin, self.user_type & 0xff)
+		connection.send(repr(GGHeader(GGOutgoingPackets.GGAddNotify), len(data)) + data)
+
+class GGRemoveNotify(GGOutgoingPackets):
+	"""
+	Jesli w trakcie dzialania sesji chcemy kogos usunac z listy kontaktow, to wysylamy do serwera infomacje o nim.
+	Po wyslaniu tego pakietu, serwer przestanie nas informowac o zmianach statusu tego kontaktu.
+	Jesli podamy user_type (patrz protokol), to mozemy zmienic rodzaj uzytkowinka (niekoniecznie usuwajac go z serwerowej listy kontaktow).
+	"""
+	def __init__(self, uin, user_type = 0x0):
+		self.uin = uin
+		self.user_type = user_type
+	
+	def send(self, connection):
+		assert type(connection) == Connection
+		data = struct.pack("<IB", self.uin, self.user_type & 0xff)
+		connection.send(repr(GGHeader(GGOutgoingPackets.GGRemoveNotify), len(data)) + data)
+	
+
+
 class GGPubDir50Request(GGOutgoingPacket):
 	"""
 	Pakiet sluzacy do odpytywania katalogu publicznego
