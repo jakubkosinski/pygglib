@@ -31,17 +31,23 @@ from threading import Timer
 import time
 
 
-## Glowna klasa do obslugi protokolu gg. 
-# Umozliwia podstawowe operacje. Tworzy sesje obslugi protokolu.
-#
 class GGSession(EventsList):	
-		## Konstruktor dla sesji gg.
-		#
-		#\param uin	                          nr gadu-gadu, dla ktorego bedzie tworzona sesja
-		#\param password	                 haslo dla nr gadu-gadu
-		#\param initial_status           poczatkowy status dostepnosci
-		#\param initial_description     poczatkowy opis 
-		#
+	"""
+	Glowna klasa do obslugi protokolu gg. Jest to pojedyncza sesja obslugujaca protokol.
+	Pola publiczne:
+		* contacts_list - zawiera liste kontaktow zalogowanego uzytkownika.
+	Aby utworzyc obiekt tej klasy nalezy przekazac do konstruktora nastepujace parametry:
+		* uin - numer gadu-gadu, dla ktorego bedzie tworzona sesja
+		* password - haslo dla numeru gadu-gadu uin
+		* initial_status - poczatkowy status dostepnosci (wartosc domyslna - GGStatuses.Avail)
+		* initial_description - poczatkowy opis (wartosc domyslna - '')
+		* contacts_list - lista kontaktow (wartosc domyslna - None)
+	 
+	Przyklad uzycia:
+	 1. GGSession(1111111, 'kaczka', , 'moj nowy opis', );
+	 Tworzy nowy obiekt sesji dla uzytkownika o numerze 1111111 z haslem kaczka i z poczatkowym statusem 'moj nowy opis'
+	"""
+	
 	def __init__(self, uin, password, initial_status = GGStatuses.Avail, initial_description = '', contacts_list = None):
 		assert type(uin) == types.IntType
 		assert type(password) == types.StringType
@@ -81,9 +87,11 @@ class GGSession(EventsList):
 		assert type(contacts_list) == ContactsList
 		self.__contacts_list = contacts_list
 	
-	## Metoda powoduje uruchomienie listenera
-	#
+
 	def __events_loop(self):
+		"""
+		Metoda powoduje uruchomienie listenera
+		"""
 		while self.__logged:
 			header = GGHeader()
 			try:
@@ -171,19 +179,21 @@ class GGSession(EventsList):
 
 			time.sleep(0.1)
 	
-	
-	## Metoda wysyla pakiet GGPing do serwera
-	#
 	def __ping(self):
+		"""
+		Metoda wysyla pakiet GGPing do serwera
+		"""
 		if not self.__logged:
 			raise GGNotLogged
 		with self.__lock:
 			out_packet = GGPing()
 			out_packet.send(self.__connection)
 	
-	## Logowanie do sieci gg
-	#
+
 	def login(self):
+		"""
+		Metoda loguje uzytkownika do sieci gadu-gadu. Parametry podawane sa w konstruktorze.
+		"""
 		with self.__lock:
 			server, port = HTTPServices.get_server(self.__uin)
 			self.__connection = Connection(server, port)
@@ -215,10 +225,11 @@ class GGSession(EventsList):
 			else:
 				raise GGUnexceptedPacket((header.type, header.length))
 
-	## Wylogowanie z sieci GG i ustawienie statusu na niedostepny
-	# \param description Taki opis zostanie pozostawiony
-	#
 	def logout(self, description = ''):
+		"""
+		Metoda wylogowuje uzytkownika z sieci gadu-gadu. Ustawiany jest opis zawarty w parametrze description.
+		Domyslnie opis pusty.
+		"""
 		assert type(description) == types.StringType and len(description) <= 70
 		
 		if not self.__logged:
@@ -232,10 +243,10 @@ class GGSession(EventsList):
 		self.__connection.disconnect()
 		self.__connected = False
 	
-	## Zmiana statusu i opisu
-	# \param status Taki staus dosteonosci zostanie ustawiony
-	#\param description Taki opis zostanie ustawiony
 	def change_status(self, status, description = ""):
+		"""
+		Metoda powoduje zmiane statusu i opisu. Jako parametry przyjmuje nowy status i nowy opis (domyslnie - opis pusty).
+		"""
 		assert type(status) == types.IntType and status in GGStatuses
 		assert type(description) == types.StringType and len(description) <= 70
 		
@@ -249,6 +260,9 @@ class GGSession(EventsList):
 			self.__description = description
 	
 	def change_description(self, description):
+		"""
+		Metoda powoduje zmiane opisu. Jako parametr przyjmuje nowy opis.
+		"""
 		assert type(description) == types.StringType and len(description) <= 70
 		
 		if self.__status != GGStatuses.AvailDescr and self.__status != GGStatuses.BusyDescr and self.__status != GGStatuses.InvisibleDescr:
@@ -257,11 +271,17 @@ class GGSession(EventsList):
 			raise GGNotLogged
 		
 		self.change_status(self.__status, description)
-	
-	## Wyslanie wiadomosci gg
-	# \param rcpt nr gadu-gadu odbiorcy
-	#\param msg wiadomosc do dostarczenia, dlugosc musi byc mniejsza od 2000 znakow
+
 	def send_msg(self, rcpt, msg, seq = 0, msg_class = GGMsgTypes.Msg, richtext = False):
+		"""
+		Metoda sluzy do wysylania wiadomosci w siecie gadu-gadu. Parametry:
+		 * rcpt - numer gadu-gadu odbiorcy wiadomosci
+		 * msg - wiadomosc do dostarczenia
+		 * seq - numer sekwencyjny wiadomosci, sluzy do potwierdzen dostarczenia wiadomosci. Domyslnie wartosc 0
+		 * msg_class - klasa wiadomosci (typ GGMsgTypes). Domyslnie wiadomosc pojawia sie w nowym oknie
+		 * richtext - okresla czy wiadomosc bedzie interpretowana jako zwykly tekst czy jako tekst formatowany.
+		   Domyslnie nieformatowany
+		"""
 		assert type(rcpt) == types.IntType
 		assert type(msg) == types.StringType and ((not richtext and len(msg) < 2000) or (richtext))  #TODO: w dalszych iteracjach: obsluga richtextmsg
 		assert type(seq) == types.IntType
@@ -280,6 +300,11 @@ class GGSession(EventsList):
 			out_packet.send(self.__connection)
 	
 	def pubdir_request(self, request, reqtype = GGPubDirTypes.Search):
+		"""
+		Metoda obslugujaca katalog publiczny. Wysyla zapytanie do serwera. Parametry:
+		 * request - zapytanie dla serwera
+		 * reqtype - typ zapytania
+		"""
 		assert type(request) == types.StringType or type(request) == types.DictType
 		assert reqtype in GGPubDirTypes
 		
@@ -292,7 +317,7 @@ class GGSession(EventsList):
 	
 	def export_contacts_list(self, filename = None):
 		"""
-		Eksportuje liste kontaktow do serwera lub do pliku, w przypadku podania nazwy jako parametr
+		Eksportuje liste kontaktow do serwera lub do pliku, w przypadku podania nazwy jako parametr filename
 		"""
 		while self.__importing == True:
 			time.sleep(0.1)
@@ -329,7 +354,8 @@ class GGSession(EventsList):
 		
 	def import_contacts_list(self, filename = None):
 		"""
-		Wysyla zadanie importu listy z serwera lub pliku, gdy podamy jego nazwe w parametrze filename. Zaimportowana lista zapisywana jest w self.__contacts_list
+		Wysyla zadanie importu listy z serwera lub pliku, gdy podamy jego nazwe w parametrze filename.
+		Zaimportowana lista zapisywana jest w self.__contacts_list
 		"""
 		
 		if filename == None:
@@ -376,7 +402,7 @@ class GGSession(EventsList):
 	def change_user_type(self, uin, user_type):
 		"""
 		Zmieniamy typ uzytkownika. user_type jest mapa wartosci z GGUserTypes.
-		Np., zeby zablokowac uzytkownka piszemy:
+		Np. zeby zablokowac uzytkownka piszemy:
 			change_user_type(12454354, GGUserTypes.Blocked)
 		"""
 		if not self.__logged:
