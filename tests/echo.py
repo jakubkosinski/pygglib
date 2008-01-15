@@ -20,12 +20,12 @@ def print_msg(sender, args):
 	print 'sender:', args[0]
 	print 'seq:', args[1]
 	print 'msg_class:', GGMsgTypes.reverse_lookup(args[3])
-	print 'messange:', args[4]
+	print 'message:', args[4]
 	print
 
 def echo(sender, args):
 	assert type(sender) == GGSession
-	sender.send_msg(args[0], args[4], GGMsgTypes.Chat)
+	sender.send_msg(args[0], args[4], msg_class = GGMsgTypes.Chat)
 	
 def print_unknown_packet(sender, args):
 	print 'Unknow packet received: type: %d, length: %d' % (args[0], args[1])
