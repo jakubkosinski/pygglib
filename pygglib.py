@@ -48,7 +48,7 @@ class GGSession(EventsList):
 	 Tworzy nowy obiekt sesji dla uzytkownika o numerze 1111111 z haslem kaczka i z poczatkowym statusem 'moj nowy opis'
 	"""
 	
-	def __init__(self, uin, password, initial_status = GGStatuses.Avail, initial_description = '', contacts_list = None):
+	def __init__(self, uin, password, initial_status = GGStatuses.Avail, initial_description = '', contacts_list = ContactsList()):
 		assert type(uin) == types.IntType
 		assert type(password) == types.StringType
 		assert initial_status in GGStatuses
@@ -394,11 +394,7 @@ class GGSession(EventsList):
 		powiadamiamy o tym fakcie serwer. Od tego momentu serwer bedzie nas informowal o statusie tego kontaktu.
 		"""
 		assert type(contact) == Contact
-		if self.__contacts_list[contact.uin] == None:
-			self.__contacts_list.add_contact(contact)
-		else:
-			self.remove_contact(contact.uin)
-			self.add_contact(contact, user_type, notify)
+		self.__contacts_list.add_contact(contact)
 		if self.__logged and notify:
 			with self.__lock:
 				out_packet = GGAddNotify(contact.uin, user_type)
@@ -463,12 +459,9 @@ class GGSession(EventsList):
 		if self.__contacts_list == None:
 			self.__contacts_list = ContactsList()
 		for contact in contacts:
-			if contact != '':
+			if contact != '' and contact != "\n":
 				newcontact = Contact({'request_string':contact})
-				if self.__contacts_list[newcontact.uin] == None:
-					self.__contacts_list.add_contact(Contact({'request_string':contact}))
-				else:
-					self.__contacts_list[newcontact.uin] = newcontact
+				self.__contacts_list.add_contact(newcontact)
 				
 	def __get_logged(self):
 		return self.__logged

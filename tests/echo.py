@@ -1,50 +1,102 @@
-import os
+# $Id$
+# echo.py - demonstracja pygglib - Gadu-Gadu echo
+# (c) Marek Chrusciel
+#     Jakub Kosinski
+#     Marcin Krupowicz
+#     Mateusz Strycharski
+#
+
+import time
 import sys
-if os.sys.platform == 'win32':
+if sys.platform == 'win32':
 	sys.path.append("..\\..\\src") # - dla windowsa
 else:
 	sys.path.append("../") # - dla linuksa
 from pygglib import GGSession
 from GGConstans import *
-import time
+from Contacts import *
 
-#
-# 11327271, haslo eto2007 
-#
+def on_login_ok_event_handler(sender, args):
+	print '---'
+	print 'Succesfully logged in.'
 
-def login_ok(sender, args):
-	print 'Zalogowano :>'
+def on_login_failed_event_handler(sender, args):
+	print '---'
+	print 'Login failed!'
 
-def print_msg(sender, args):
-	print 'Message received:'
-	print 'sender:', args[0]
-	print 'seq:', args[1]
-	print 'msg_class:', GGMsgTypes.reverse_lookup(args[3])
-	print 'message:', args[4]
-	print
+def on_need_email_event_handler(sender, args):
+	print '---'
+	print 'Server needs e-mail!'
 
-def echo(sender, args):
+def on_msg_recv_event_handler(sender, args):
+	print '---'
+	contact = sender.contacts_list[args.sender]
+	if contact != None:
+		print 'Message from', contact.shown_name
+	else:
+		print 'Message from', args.sender
+	print 'Message sequence number:', args.seq
+	print 'Message Classes:', GGMsgTypes.reverse_lookup(args.msg_class)
+	print '"' + args.message + '"'
+
+def on_msg_recv_echo(sender, args):
 	assert type(sender) == GGSession
-	sender.send_msg(args[0], args[4], msg_class = GGMsgTypes.Chat)
+	sender.send_msg(args.sender, args.message, msg_class = GGMsgTypes.Chat)
 	
-def print_unknown_packet(sender, args):
-	print 'Unknow packet received: type: %d, length: %d' % (args[0], args[1])
+def on_unknown_packet_event_handler(sender, args):
+	print '---'
+	print 'Unknown packet received: type: 0x%04x, length: 0x%04x' % (args.type, args.length)
 	print
 	
-def print_msg_ack(sender, args):
-	print 'Message ack received: status: %s, recipient: %d, seq: %d' % (GGMsgStatus.reverse_lookup(args[0]), args[1], args[2])
+def on_msg_ack_event_handler(sender, args):
+	print '---'
+	print 'Message ack received: status: %s, recipient: %d, seq: %d' % (GGMsgStatus.reverse_lookup_without_mask(args.status), args.recipient, args.seq)
 	print
 
+def on_notify_reply_event_handler(sender, args):
+	print '---'
+	print 'Notify from server:'
+	for contact in args.contacts_list:
+		print contact.shown_name + ' is ' + GGStatuses.reverse_lookup_without_mask(contact.status)
+		if contact.description != "":
+			print 'Description:', contact.description
+
+def on_userlist_reply_event_handler(sender, args):
+	print '---'
+	print 'Contacts list received from server'
+	for contact in sender.contacts_list:
+		print contact.shown_name + ': ' + contact.uin
+
+def on_status_changed_event_handler(sender, args):
+	print '---'
+	print args.contact.shown_name + ' has changed status.'
+	print 'New status: ', GGStatuses.reverse_lookup_without_mask(args.contact.status)
+	if args.contact.description != '':
+		print '"' + args.contact.description + '"'
+
+def on_disconnecting_event_handler(sender, args):
+	print '---'
+	print 'Server has closed the connection'
 	
 if __name__ == "__main__":
-	session = GGSession(uin = 11327271, password = 'eto2007')
-	session.register('on_login_ok', login_ok)
-	session.register('on_msg_recv', print_msg)
-	session.register('on_msg_recv', echo)
-	session.register('on_unknown_packet', print_unknown_packet)
-	session.register('on_send_msg_ack', print_msg_ack)
+	# Inicjowanie sesji
+	session = GGSession(uin = 11327271, password = 'eto2007', initial_status = GGStatuses.AvailDescr, initial_description = 'pygglib echo demo')
+	# Rejestrowanie obslugi zdarzen
+	session.register('on_login_ok', on_login_ok_event_handler)
+	session.register('on_msg_recv', on_msg_recv_event_handler)
+	session.register('on_msg_recv', on_msg_recv_echo)
+	session.register('on_unknown_packet', on_unknown_packet_event_handler)
+	session.register('on_send_msg_ack', on_msg_ack_event_handler)
+	session.register('on_notify_reply', on_notify_reply_event_handler)
+	session.register('on_userlist_reply', on_userlist_reply_event_handler)
+	session.register('on_status_changed', on_status_changed_event_handler)
+	session.register('on_disconnecting', on_disconnecting_event_handler)
+
+	session.add_contact(Contact({'uin':3993939,'shown_name':'Cinu'}))	
 	session.login()
-	session.change_status(GGStatuses.AvailDescr, "pygglib")
-	time.sleep(5)
+	session.import_contacts_list()
+	x = ''
+	while x != 'quit':
+		x = raw_input()
 	session.logout()
-		
+	
