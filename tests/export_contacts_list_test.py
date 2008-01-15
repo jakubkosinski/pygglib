@@ -36,7 +36,7 @@ def on_pubdir_recv_event_handler(sender, args):
 	print 'PubDir type', args.req_type
 	print 'PubDir sequence numer', args.seq
 	entries = args.reply.split("\0\0")
-	for item in entries:
+	for item in entries.data:
 		print request_to_dict(item)
 	print
 	

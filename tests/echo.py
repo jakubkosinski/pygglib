@@ -56,7 +56,7 @@ def on_msg_ack_event_handler(sender, args):
 def on_notify_reply_event_handler(sender, args):
 	print '---'
 	print 'Notify from server:', len(args.contacts_list)
-	for contact in args.contacts_list:
+	for contact in args.contacts_list.data:
 		print contact.shown_name + ' is ' + GGStatuses.reverse_lookup_without_mask(contact.status)
 		if contact.description != "":
 			print 'Description:', contact.description
@@ -64,7 +64,7 @@ def on_notify_reply_event_handler(sender, args):
 def on_userlist_reply_event_handler(sender, args):
 	print '---'
 	print 'Contacts list received from server'
-	for contact in sender.contacts_list:
+	for contact in sender.contacts_list.data:
 		print contact.shown_name + ': ' + str(contact.uin)
 
 def on_status_changed_event_handler(sender, args):
@@ -92,7 +92,8 @@ if __name__ == "__main__":
 	session.register('on_status_changed', on_status_changed_event_handler)
 	session.register('on_disconnecting', on_disconnecting_event_handler)
 
-	session.add_contact(Contact({'uin':3993939,'shown_name':'Cinu'}))	
+	session.add_contact(Contact({'uin':3993939,'shown_name':'Cinu'}))
+	session.add_contact(Contact({'uin':4668758,'shown_name':'Anna'}))
 	session.login()
 	session.import_contacts_list()
 	x = ''

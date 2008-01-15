@@ -159,6 +159,8 @@ class GGSession(EventsList):
 					self.__make_contacts_list(self.__contact_buffer)
 					self.__contact_buffer = "" # oprozniamy bufor
 					self.on_userlist_reply(self, EventArgs({"contacts_list" : self.__contacts_list}))
+				else:
+					self.on_userlist_reply(self, EventArgs({"reqtype":in_packet.reqtype, "request":in_packet.request}))
 
 			elif header.type == GGIncomingPackets.GGStatus:
 				in_packet = GGStatus()

@@ -170,11 +170,12 @@ class ContactsList(list):
 		else:
 			raise AssertionError
 		
-		if self.__index_by_uin(c.uin) == -1:
-			self.data.append(c)
-		else:
-			self.remove_contact(c.uin)
+		if self[c.uin] != None:
+			x = self[c.uin]
+			self.data.remove(x)
 			self.add_contact(c)
+		else:
+			self.data.append(c)
 	
 	def remove_contact(self, uin):
 		"""

@@ -27,17 +27,21 @@ def on_unknown_packet_event_handler(sender, args):
 	print 'Unknow packet received: type: %d, length: %d' % (args.type, args.length)
 	print
 	
+def on_userlist_reply(sender, args):
+    if args.reqtype != GGUserListReplyTypes.GetReply:
+        print 'Eksport udany'
 	
 if __name__ == "__main__":
 	session = GGSession(uin = 11327271, password = 'eto2007')
 	session.register('on_login_ok', login_ok_event_handler)
 	session.register('on_msg_recv', msg_recv_event_handler)
+        session.register('on_userlist_reply', on_userlist_reply)
 	session.register('on_unknown_packet', on_unknown_packet_event_handler)
         session.import_contacts_list("kontakty.txt")
         clist = session.contacts_list
         assert clist[12345678].shown_name == "Ania"
 	session.login()
         session.export_contacts_list()
-        time.sleep(5)
+        time.sleep(10)
 	session.logout()
 
