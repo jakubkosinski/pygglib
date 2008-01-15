@@ -35,7 +35,7 @@ class GGBadTokenVal(GGException):
 	"""
 	pass
 
-class GGNotInContactsList(GGException):'
+class GGNotInContactsList(GGException):
 	"""
 	Wyjatek gadu-gadu. Nie ma uzytkownika w liscie kontaktow.
 	"""

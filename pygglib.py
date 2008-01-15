@@ -56,7 +56,7 @@ class GGSession(EventsList):
 		assert type(contacts_list) == ContactsList or contacts_list == None		
 		EventsList.__init__(self, ['on_login_ok', 'on_login_failed', 'on_need_email', 'on_msg_recv', \
 				'on_unknown_packet', 'on_send_msg_ack', 'on_notify_reply', 'on_pubdir_recv', 'on_userlist_reply', \
-				'on_status_changed'])
+				'on_status_changed', 'on_disconnecting'])
 		self.__uin = uin
 		self.__password = password
 		self.__status = initial_status
@@ -133,7 +133,7 @@ class GGSession(EventsList):
 				in_packet = GGDisconnecting()
 				with self.__lock:
 					in_packet.read(self.__connection, header.length)
-				self.login() # po rozlaczeniu przez serwer laczymy sie ponownie
+				self.on_disconnecting(sender, (None, )) # po rozlaczeniu przez serwer laczymy sie ponownie
 
 			elif header.type == GGIncomingPackets.GGUserListReply:
 				in_packet = GGUserListReply()
@@ -219,9 +219,11 @@ class GGSession(EventsList):
 				self.__send_contacts_list()
 				#self.change_status(self.__status, self.__description) #ustawienie statusu przy pakiecie GGLogin cos nie dziala :/
 			elif header.type == GGIncomingPackets.GGLoginFailed:
-				self.on_login_failed(self, None)
+				self.on_login_failed(self, (None, ))
 			elif header.type == GGIncomingPackets.GGNeedEMail:
-				self.on_need_email(self, None)
+				self.on_need_email(self, (None, ))
+			elif header.type == GGIncomingPackets.GGDisconnecting:
+				self.on_disconnecting(self, (None, ))
 			else:
 				raise GGUnexceptedPacket((header.type, header.length))
 
@@ -454,7 +456,11 @@ class GGSession(EventsList):
 				else:
 					self.__contacts_list[newcontact.uin] = newcontact
 				
+	def __get_logged(self):
+		return self.__logged
+	
 	#
 	# Properties
 	#
 	contacts_list = property(__get_contacts_list, __set_contacts_list)
+	logged = property(__get_logged)

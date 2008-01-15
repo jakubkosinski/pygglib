@@ -25,7 +25,7 @@ def print_msg(sender, args):
 
 def echo(sender, args):
 	assert type(sender) == GGSession
-	sender.send_msg(args[0], args[4])
+	sender.send_msg(args[0], args[4], GGMsgTypes.Chat)
 	
 def print_unknown_packet(sender, args):
 	print 'Unknow packet received: type: %d, length: %d' % (args[0], args[1])

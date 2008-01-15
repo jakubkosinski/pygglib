@@ -163,12 +163,18 @@ class ContactsList(list):
 		"""
 		Metoda dodajaca kontakt. Jako parametr przyjmuje obiekt klasy Contact lub napis w formacie pliku kontaktow Gadu-Gadu.
 		"""
-		if type(contact) == Contact:
-			self.data.append(contact)
-		elif type(contact) == types.StringType:
-			self.data.append(Contact(contact))
+		if type(contact) == types.StringType:
+			c = Contact(contact)
+		elif type(contact) == Contact:
+			c = contact
 		else:
 			raise AssertionError
+		
+		if self.__index_by_uin(c.uin) == -1:
+			self.data.append(c)
+		else:
+			self.remove_contact(c.uin)
+			self.add_contact(c)
 	
 	def remove_contact(self, uin):
 		"""

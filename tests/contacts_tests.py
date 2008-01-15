@@ -1,7 +1,6 @@
-#
-# Testy listy kontaktow, pakietow GGNotify* i statusow
-#
-import os
+# $Id$
+
+import time
 import sys
 if os.sys.platform == 'win32':
 	sys.path.append("..\\..\\src") # - dla windowsa
@@ -10,11 +9,6 @@ else:
 from pygglib import GGSession
 from GGConstans import *
 from Contacts import *
-import time
-
-#
-# 11327271, haslo eto2007 
-#
 
 def login_ok(sender, args):
 	print 'Zalogowano :>'
@@ -32,12 +26,12 @@ def print_unknown_packet(sender, args):
 	print
 
 def notify_reply(sender, args):
-	print 'dupa'
+	print 'reply notified'
 	
 	
 if __name__ == "__main__":
 	try:
-		contacts = ContactsList([Contact(3993939), Contact(3217426), Contact(4102378)])
+		contacts = ContactsList([Contact({'uin':3993939}), Contact({'uin':3217426}), Contact({'uin':4102378})])
 		session = GGSession(uin = 11327271, password = 'eto2007', contacts_list = contacts)
 		session.register('on_login_ok', login_ok)
 		session.register('on_msg_recv', print_msg)
@@ -50,14 +44,8 @@ if __name__ == "__main__":
 		print "uin: %d, status: %d description: %s" % (session.contacts_list[3993939].uin, session.contacts_list[3993939].status, session.contacts_list[3993939].description)
 		time.sleep(4)
 		session.logout()
-	#except GGException, e:
-	#	print '[!]GGException caught: %s ' % (repr(e),)
-	#	
-	#except Exception, e:
-	#	print '[!]Generic exception caught: %s ' % (repr(e), )
 	finally:
 		try:
 			session.logout()
 		except: #znaczy, ze nie jestesmy zalogowani
 			pass 
-		
