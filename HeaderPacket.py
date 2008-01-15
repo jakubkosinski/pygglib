@@ -22,9 +22,6 @@ class GGHeader(object):
 	#	pass
 	
 	def __init__(self, type_=0, length=0):
-		"""
-		Konstruktor ten wywolujemy wtedy kiedy pakiet jest przeznaczony do wyslania
-		"""
 		assert type(type_) == types.IntType
 		assert type(length) == types.IntType
 		
@@ -34,7 +31,7 @@ class GGHeader(object):
 	
 	def read(self, connection):
 		assert type(connection) == Connection
-		data = connection.read(8)
+		data = connection.read(8, timeout = 10)
 		self.type, self.length = struct.unpack("<II", data)
 	
 	def __repr__(self):

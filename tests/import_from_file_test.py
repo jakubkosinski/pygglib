@@ -60,5 +60,4 @@ if __name__ == "__main__":
         session.export_contacts_list()
         time.sleep(5)
 	session.logout()
-	x = raw_input()
 

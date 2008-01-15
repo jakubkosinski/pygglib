@@ -86,41 +86,51 @@ class GGSession(EventsList):
 	def __events_loop(self):
 		while self.__logged:
 			header = GGHeader()
-			header.read(self.__connection)
+			try:
+				header.read(self.__connection)
+			except: #paskudnie, ale coz... ;) Na koniec sesji to jest potrzebne
+				break
 			if header.type == GGIncomingPackets.GGRecvMsg:
 				in_packet = GGRecvMsg()
-				in_packet.read(self.__connection, header.length)
+				with self.__lock:
+					in_packet.read(self.__connection, header.length)
 				self.on_msg_recv(self, (in_packet.sender, in_packet.seq, in_packet.time, in_packet.msg_class, in_packet.message))
 
 			elif header.type == GGIncomingPackets.GGSendMsgAck:
 				in_packet = GGSendMsgAck()
-				in_packet.read(self.__connection, header.length)
+				with self.__lock:
+					in_packet.read(self.__connection, header.length)
 				self.on_send_msg_ack(self, (in_packet.status, in_packet.recipient, in_packet.seq))
 
 			elif header.type == GGIncomingPackets.GGNotifyReplyOld:
 				in_packet = GGNotifyReplyOld(self.__contacts_list)
-				in_packet.read(self.__connection, header.length)
+				with self.__lock:
+					in_packet.read(self.__connection, header.length)
 				self.on_notify_reply(self, (self.__contacts_list,))
 
 			elif header.type == GGIncomingPackets.GGNotifyReply60 or header.type == GGIncomingPackets.GGNotifyReply77:
 				in_packet = GGNotifyReply(self.__contacts_list, header.type)
-				in_packet.read(self.__connection, header.length)
+				with self.__lock:
+					in_packet.read(self.__connection, header.length)
 				self.__contacts_list = in_packet.contacts
 				self.on_notify_reply(self, (self.__contacts_list,))
 
 			elif header.type == GGIncomingPackets.GGPubDir50Reply:
 				in_packet = GGPubDir50Reply()
-				in_packet.read(self.__connection, header.length)
+				with self.__lock:
+					in_packet.read(self.__connection, header.length)
 				self.on_pubdir_recv(self, (in_packet.reqtype, in_packet.seq, in_packet.reply))
 
 			elif header.type == GGIncomingPackets.GGDisconnecting:
 				in_packet = GGDisconnecting()
-				in_packet.read(self.__connection, header.length)
+				with self.__lock:
+					in_packet.read(self.__connection, header.length)
 				self.login() # po rozlaczeniu przez serwer laczymy sie ponownie
 
 			elif header.type == GGIncomingPackets.GGUserListReply:
 				in_packet = GGUserListReply()
-				in_packet.read(self.__connection, header.length)
+				with self.__lock:
+					in_packet.read(self.__connection, header.length)
 				self.on_userlist_reply(self, (in_packet.reqtype, in_packet.request))
 				if in_packet.reqtype == GGUserListReplyTypes.GetMoreReply:
 					self.__contact_buffer += in_packet.request
@@ -132,7 +142,8 @@ class GGSession(EventsList):
 
 			elif header.type == GGIncomingPackets.GGStatus:
 				in_packet = GGStatus()
-				in_packet.read(self.__connection, header.length)
+				with self.__lock:
+					in_packet.read(self.__connection, header.length)
 				uin = in_packet.uin
 				self.__contacts_list[uin].status = in_packet.status
 				self.__contacts_list[uin].description = in_packet.description
@@ -141,7 +152,8 @@ class GGSession(EventsList):
 
 			elif header.type == GGIncomingPackets.GGStatus60:
 				in_packet = GGStatus60()
-				in_packet.read(self.__connection, header.length)
+				with self.__lock:
+					in_packet.read(self.__connection, header.length)
 				uin = in_packet.uin
 				self.__contacts_list[uin].status = in_packet.status
 				self.__contacts_list[uin].description = in_packet.description
@@ -153,7 +165,8 @@ class GGSession(EventsList):
 				self.on_status_changed(self, (self.__contacts_list[uin],))
 
 			else:
-				self.__connection.read(header.length) #odbieramy smieci.. ;)
+				with self.__lock:
+					self.__connection.read(header.length) #odbieramy smieci.. ;)
 				self.on_unknown_packet(self, (header.type, header.length))
 
 			time.sleep(0.1)
@@ -173,7 +186,7 @@ class GGSession(EventsList):
 	def login(self):
 		with self.__lock:
 			server, port = HTTPServices.get_server(self.__uin)
-			self.__connection = Connection(server, 443)
+			self.__connection = Connection(server, port)
 			self.__connected = True #TODO: sprawdzanie tego i timeouty
 			header = GGHeader()
 			header.read(self.__connection)
@@ -212,18 +225,12 @@ class GGSession(EventsList):
 			raise GGNotLogged
 		
 		self.change_status(description == '' and GGStatuses.NotAvail or GGStatuses.NotAvailDescr, description)
-		with self.__lock:
-			print "a"
-			self.__logged = False # przed join(), zeby zakonczyc watek
-			print "b"
-			self.__events_thread.join()
-			print "c"
-			self.__pinger.cancel()
-			print "d"
-			self.__connection.disconnect()
-			print "e"
-			self.__connected = False
-		print "f"
+		#with self.__lock:
+		self.__logged = False # przed join(), zeby zakonczyc watek
+		self.__events_thread.join()
+		self.__pinger.cancel()
+		self.__connection.disconnect()
+		self.__connected = False
 	
 	## Zmiana statusu i opisu
 	# \param status Taki staus dosteonosci zostanie ustawiony
