@@ -67,6 +67,31 @@ class Enum(object):
 #============================
 # Obsluga zdarzen
 #
+class EventArgs(object):
+	"""
+	Klasa argumentow przekazywanych do zdarzen. Sposob wykorzystania (przyklad):
+	* self.on_status_changed(EventArgs({"uin":uin, "status":status})) - w pygglib.py (__events_loop)
+	* def status_changed_event_handler(sender, args): - w programie korzystajacym z biblioteki (podpiete zdarzenie)
+		print 'Uzytkownik %d zmienil status na %d' % (args.uin, args.status) 
+	"""
+	def __init__(self, args):
+		"""
+		args - slownik, ktorego kluczami sa nazwy argumentow, a wartosciami - wartosci dla podanych argumentow.
+		np.: args = { "uin":3993939, name:"Jasio", ip:"127.0.0.1" }
+		"""
+		self.__args = args
+	
+	def __getattr__(self, arg):
+		"""
+		Pobiera wartosc argumentu o nazwie arg
+		"""
+		if self.__args.has_key(arg):
+			return self.__args[arg]
+		else:
+			raise AttributeError
+	def args(self):
+		return self.__args.keys()
+
 class UnknowEventError(AttributeError):
 	pass
 
@@ -103,7 +128,7 @@ class EventsList(object):
 		""" Returns: liste funkcji ktore obsluguja zdarzenie 'event'
 		"""
 		if not self.__events.has_key(event):
-			raise UnknowEventError
+			raise AttributeError("event: %s", event)
 		return Event(self.__events[event])
 	
 	def register(self, event, event_handler):
@@ -273,6 +298,8 @@ def gg_rtf_to_pygglib_rtf(rtf_msg):
 		return rtf_msg
 	plain_text, format_string = rtf_msg[:index], rtf_msg[index:]
 	#TODO: skonczyc....
+
+
 
 #if __name__ == "__main__":
 #	pygglib_rtf_to_gg_rtf("<b>Ala <i>ma</i></b><color red=123 green=143 blue=123> KOTA</color>")

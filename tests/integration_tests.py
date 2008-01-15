@@ -14,27 +14,27 @@ import time
 #
 
 def login_ok_event_handler(sender, args):
-	print 'Zalogowano :>'
+	print 'Zalogowano.'
 
 def msg_recv_event_handler(sender, args):
 	print 'Message received:'
-	print 'sender:', args[0]
-	print 'seq:', args[1]
-	print 'msg_class:', GGMsgTypes.reverse_lookup(args[3])
-	print 'message:', args[4]
+        print 'sender:', args.sender
+	print 'seq:', args.seq
+	print 'msg_class:', GGMsgTypes.reverse_lookup(args.msg_class)
+	print 'message:', args.message
 	print
 	
 def on_unknown_packet_event_handler(sender, args):
-	print 'Unknow packet received: type: %d, length: %d' % (args[0], args[1])
+	print 'Unknow packet received: type: %d, length: %d' % (args.type, args.length)
 	print
 	
 def on_send_msg_ack_event_handler(sender, args):
-	print 'msg_send_ack received: status: %s, recipient: %d, seq: %d' % (GGMsgStatus.reverse_lookup(args[0]), args[1], args[2])
+	print 'msg_send_ack received: status: %s, recipient: %d, seq: %d' % (GGMsgStatus.reverse_lookup_without_mask(args.status), args.recipient, args.seq)
 	
 def on_pubdir_recv_event_handler(sender, args):
-	print 'PubDir type', args[0]
-	print 'PubDir sequence numer', args[1]
-	entries = args[2].split("\0\0")
+	print 'PubDir type', args.req_type
+	print 'PubDir sequence numer', args.seq
+	entries = args.reply.split("\0\0")
 	for item in entries:
 		print request_to_dict(item)
 	print

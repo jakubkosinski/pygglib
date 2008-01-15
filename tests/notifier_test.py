@@ -19,49 +19,46 @@ def login_ok_event_handler(sender, args):
 
 def msg_recv_event_handler(sender, args):
 	print 'Message received:'
-	if sender.contacts_list[args[0]] != None:
-		print 'sender:', sender.contacts_list[args[0]].shown_name, "(", args[0], ")"
+	if sender.contacts_list[args.sender] != None:
+		print 'sender:', sender.contacts_list[args.sender].shown_name, "(", args.sender, ")"
 	else:
-		print 'sender:', args[0]
-        print 'sender:', args[0]
-	print 'seq:', args[1]
-	print 'msg_class:', GGMsgTypes.reverse_lookup(args[3])
-	print 'message:', args[4]
+		print 'sender:', args.sender
+	print 'seq:', args.seq
+	print 'msg_class:', GGMsgTypes.reverse_lookup(args.msg_class)
+	print 'message:', args.message
 	print
 	
 def on_unknown_packet_event_handler(sender, args):
-	print 'Unknown packet received: type: %d, length: %d' % (args[0], args[1])
+	print 'Unknown packet received: type: %d, length: %d' % (args.type, args.length)
 	print
 	
 def on_send_msg_ack_event_handler(sender, args):
-	print 'msg_send_ack received: status: %s, recipient: %d, seq: %d' % (GGMsgStatus.reverse_lookup(args[0]), args[1], args[2])
+	print 'msg_send_ack received: status: %s, recipient: %d, seq: %d' % (GGMsgStatus.reverse_lookup_without_mask(args.status), args.recipient, args.seq)
 	
 def on_pubdir_recv_event_handler(sender, args):
-	print 'PubDir type', args[0]
-	print 'PubDir sequence numer', args[1]
-	entries = args[2].split("\0\0")
+	print 'PubDir type', args.req_type
+	print 'PubDir sequence numer', args.seq
+	entries = args.request.split("\0\0")
 	for item in entries:
 		print request_to_dict(item)
 	print
 	
 def on_userlist_reply(sender, args):
-	print 'UserListReply type', args[0]
-	print 'UserListReply request:'
-	print args[1]
+	print 'UserListReply'
 	print
 
 def on_status_changed(sender, args):
-	print args[0].shown_name + ' has changed status'
-	print 'New status:', GGStatuses.reverse_lookup_without_mask(args[0].status)
-	print 'Desc: ', args[0].description
+	print args.contact.shown_name + ' has changed status'
+	print 'New status:', GGStatuses.reverse_lookup_without_mask(args.contact.status)
+	print 'Desc: ', args.contact.description
 	print
 
 def on_notify_reply(sender, args):
-	for contact in sender.contacts_list:
+	for contact in args.contacts_list:
 		print contact.shown_name, contact.uin, GGStatuses.reverse_lookup_without_mask(contact.status), contact.description
 
 def on_pubdir_recv_event_handler(sender, args):
-	entry = request_to_dict(args[2].split("\0\0")[0])
+	entry = request_to_dict(args.reply.split("\0\0")[0])
 	contact = Contact({'uin':entry['FmNumber'], 'shown_name':entry['nickname']})
 	sender.add_contact(contact)
 

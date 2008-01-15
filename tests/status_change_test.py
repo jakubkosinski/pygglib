@@ -30,26 +30,35 @@ PASS2 = 'eto2007'
 
 DESC1 = 'a'
 DESC2 = 'b'
+
+global PASSED
+global INITIAL
+global CHANGED
 PASSED = True
 INITIAL = False
 CHANGED = False
 
 def on_notify_reply(sender, args):
+	global INITIAL
+	global PASSED
 	INITIAL = True
-	print 'status poczatkowy uzytkownika', args[0][UIN2].description
-	if args[0][UIN2].description != DESC1:
+	PASSED = True
+	print 'status poczatkowy uzytkownika', args.contacts_list[UIN2].description
+	if args.contacts_list[UIN2].description != DESC1:
 		PASSED = False
 	
 def on_status_changed(sender, args):
+	global CHANGED
+	global PASSED
 	CHANGED = True
+	PASSED = True
 	print 'Zmiana statusu'
-	print args[0].uin, "'"+args[0].description+"'"
-	if (args[0].uin != UIN2 or args[0].description != DESC2):
+	print args.contact.uin, "'"+args.contact.description+"'"
+	if (args.contact.uin != UIN2 or args.contact.description != DESC2):
 		PASSED = False
 
 def on_disconnecting(sender, args):
 	print "Rozlaczono przez serwer"
-	exit
 
 class ChangeStatusTest(unittest.TestCase):
 	def setUp(self):
@@ -66,18 +75,18 @@ class ChangeStatusTest(unittest.TestCase):
 		while self.session2.logged != True:
 			time.sleep(0.1)
 		print "Session2 logged in"
-		
+		time.sleep(1)
 		self.session1.login()
 		while self.session1.logged != True:
 			time.sleep(0.1)
 		print "Session1 logged in"
 		
+		time.sleep(5)
 		self.session2.change_description(DESC2)		
 		time.sleep(5)
 		
 		self.session1.logout()
 		self.session2.logout()
-		
 		self.assertTrue(PASSED)
 		self.assertTrue(CHANGED)
 		self.assertTrue(INITIAL)

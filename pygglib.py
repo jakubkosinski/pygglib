@@ -102,44 +102,55 @@ class GGSession(EventsList):
 				in_packet = GGRecvMsg()
 				with self.__lock:
 					in_packet.read(self.__connection, header.length)
-				self.on_msg_recv(self, (in_packet.sender, in_packet.seq, in_packet.time, in_packet.msg_class, in_packet.message))
+				self.on_msg_recv(self, EventArgs({\
+					"sender" : in_packet.sender,\
+					"seq" : in_packet.seq,\
+					"time" : in_packet.time,\
+					"msg_class" : in_packet.msg_class,\
+					"message" : in_packet.message}))
 
 			elif header.type == GGIncomingPackets.GGSendMsgAck:
 				in_packet = GGSendMsgAck()
 				with self.__lock:
 					in_packet.read(self.__connection, header.length)
-				self.on_send_msg_ack(self, (in_packet.status, in_packet.recipient, in_packet.seq))
+				self.on_send_msg_ack(self, EventArgs({\
+					"status" : in_packet.status,\
+					"recipient" : in_packet.recipient,\
+					"seq" : in_packet.seq}))
 
 			elif header.type == GGIncomingPackets.GGNotifyReplyOld:
 				in_packet = GGNotifyReplyOld(self.__contacts_list)
 				with self.__lock:
 					in_packet.read(self.__connection, header.length)
-				self.on_notify_reply(self, (self.__contacts_list,))
+				self.__contacts_list = in_packet.contacts
+				self.on_notify_reply(self, EventArgs({"contacts_list" : self.__contacts_list}))
 
 			elif header.type == GGIncomingPackets.GGNotifyReply60 or header.type == GGIncomingPackets.GGNotifyReply77:
 				in_packet = GGNotifyReply(self.__contacts_list, header.type)
 				with self.__lock:
 					in_packet.read(self.__connection, header.length)
 				self.__contacts_list = in_packet.contacts
-				self.on_notify_reply(self, (self.__contacts_list,))
+				self.on_notify_reply(self, EventArgs({"contacts_list" : self.__contacts_list}))
 
 			elif header.type == GGIncomingPackets.GGPubDir50Reply:
 				in_packet = GGPubDir50Reply()
 				with self.__lock:
 					in_packet.read(self.__connection, header.length)
-				self.on_pubdir_recv(self, (in_packet.reqtype, in_packet.seq, in_packet.reply))
+				self.on_pubdir_recv(self, EventArgs({\
+					"req_type" : in_packet.reqtype,\
+					"seq" : in_packet.seq,\
+					"reply" : in_packet.reply}))
 
 			elif header.type == GGIncomingPackets.GGDisconnecting:
 				in_packet = GGDisconnecting()
 				with self.__lock:
 					in_packet.read(self.__connection, header.length)
-				self.on_disconnecting(sender, (None, )) # po rozlaczeniu przez serwer laczymy sie ponownie
+				self.on_disconnecting(self, EventArgs({}))
 
 			elif header.type == GGIncomingPackets.GGUserListReply:
 				in_packet = GGUserListReply()
 				with self.__lock:
 					in_packet.read(self.__connection, header.length)
-				self.on_userlist_reply(self, (in_packet.reqtype, in_packet.request))
 				if in_packet.reqtype == GGUserListReplyTypes.GetMoreReply:
 					self.__contact_buffer += in_packet.request
 				if in_packet.reqtype == GGUserListReplyTypes.GetReply:
@@ -147,6 +158,7 @@ class GGSession(EventsList):
 					self.__contact_buffer += in_packet.request #... bo lista moze przyjsc w kilku pakietach
 					self.__make_contacts_list(self.__contact_buffer)
 					self.__contact_buffer = "" # oprozniamy bufor
+					self.on_userlist_reply(self, EventArgs({"contacts_list" : self.__contacts_list}))
 
 			elif header.type == GGIncomingPackets.GGStatus:
 				in_packet = GGStatus()
@@ -156,13 +168,15 @@ class GGSession(EventsList):
 				self.__contacts_list[uin].status = in_packet.status
 				self.__contacts_list[uin].description = in_packet.description
 				self.__contacts_list[uin].return_time = in_packet.return_time
-				self.on_status_changed(self, (self.__contacts_list[uin],))
+				self.on_status_changed(self, EventArgs({"contact" : self.__contacts_list[uin]}))
 
 			elif header.type == GGIncomingPackets.GGStatus60:
 				in_packet = GGStatus60()
 				with self.__lock:
 					in_packet.read(self.__connection, header.length)
 				uin = in_packet.uin
+				if self.__contacts_list[uin] == None:
+					self.__contacts_list.add_contact(Contact({"uin":in_packet.uin}))
 				self.__contacts_list[uin].status = in_packet.status
 				self.__contacts_list[uin].description = in_packet.description
 				self.__contacts_list[uin].return_time = in_packet.return_time
@@ -170,12 +184,12 @@ class GGSession(EventsList):
 				self.__contacts_list[uin].port = in_packet.port
 				self.__contacts_list[uin].version = in_packet.version
 				self.__contacts_list[uin].image_size = in_packet.image_size
-				self.on_status_changed(self, (self.__contacts_list[uin],))
+				self.on_status_changed(self, EventArgs({"contact" : self.__contacts_list[uin]}))
 
 			else:
 				with self.__lock:
 					self.__connection.read(header.length) #odbieramy smieci.. ;)
-				self.on_unknown_packet(self, (header.type, header.length))
+				self.on_unknown_packet(self, EventArgs({"type" : header.type, "length" : header.length}))
 
 			time.sleep(0.1)
 	
@@ -213,17 +227,17 @@ class GGSession(EventsList):
 				self.__logged = True
 				in_packet = GGLoginOK()
 				in_packet.read(self.__connection, header.length)
-				self.on_login_ok(self, None)
+				self.on_login_ok(self, EventArgs({}))
 				self.__events_thread.start() #uruchamiamy watek listenera
 				time.sleep(0.5) #TODO: potrzebne to?
 				self.__send_contacts_list()
 				#self.change_status(self.__status, self.__description) #ustawienie statusu przy pakiecie GGLogin cos nie dziala :/
 			elif header.type == GGIncomingPackets.GGLoginFailed:
-				self.on_login_failed(self, (None, ))
+				self.on_login_failed(self, EventArgs({}))
 			elif header.type == GGIncomingPackets.GGNeedEMail:
-				self.on_need_email(self, (None, ))
+				self.on_need_email(self, EventArgs({}))
 			elif header.type == GGIncomingPackets.GGDisconnecting:
-				self.on_disconnecting(self, (None, ))
+				self.on_disconnecting(self, EventArgs({}))
 			else:
 				raise GGUnexceptedPacket((header.type, header.length))
 

@@ -12,11 +12,11 @@ def login_ok(sender, args):
 	print 'Zalogowano :>'
 
 def print_msg(sender, args):
-	print '<%d>: %s' % (args[0], args[4])
+	print '<%d>: %s' % (args.uin, args.message)
 
 	
 def print_unknown_packet(sender, args):
-	print 'Unknow packet received: type: %d, length: %d' % (args[0], args[1])
+	print 'Unknow packet received: type: %d, length: %d' % (args.type, args.length)
 	print
 
 if __name__ == "__main__":

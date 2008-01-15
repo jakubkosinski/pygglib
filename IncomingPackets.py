@@ -110,10 +110,15 @@ class GGNotifyReplyOld(GGIncomingPacket):
 	"""
 	def __init__(self, contacts):
 		assert type(contacts) == ContactsList
-		self.__contacts = contatcs
+		self.__contacts = contacts
 	
 	def read(self, connection, size):
 		raise NotImplemented
+
+	def __get_contacts(self):
+		return self.__contacts
+	
+	contacts = property(__get_contacts)
 
 
 class GGNotifyReply(GGIncomingPacket):

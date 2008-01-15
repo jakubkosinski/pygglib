@@ -1,28 +1,28 @@
 # $Id$
-
-import time
 import sys
-if os.sys.platform == 'win32':
+if sys.platform == 'win32':
 	sys.path.append("..\\..\\src") # - dla windowsa
 else:
 	sys.path.append("../") # - dla linuksa
+
 from pygglib import GGSession
 from GGConstans import *
 from Contacts import *
+import time
 
 def login_ok(sender, args):
 	print 'Zalogowano :>'
 
 def print_msg(sender, args):
 	print 'Message received:'
-	print 'sender:', args[0]
-	print 'seq:', args[1]
-	print 'msg_class:', GGMsgTypes.reverse_lookup(args[3])
-	print 'messange:', args[4]
+	print 'sender:', args.sender
+	print 'seq:', args.seq
+	print 'msg_class:', GGMsgTypes.reverse_lookup(args.msg_class)
+	print 'message:', args.message
 	print
 	
 def print_unknown_packet(sender, args):
-	print 'Unknow packet received: type: %d, length: %d' % (args[0], args[1])
+	print 'Unknow packet received: type: %d, length: %d' % (args.type, args.length)
 	print
 
 def notify_reply(sender, args):
