@@ -18,11 +18,11 @@ def login_ok_event_handler(sender, args):
 	print
 
 def status_notify_event_handler(sender, args):
-	print 'Status zmienil numerek', args[0]
+	print 'Numerek %d zmienil status' % args.uin
 	print
 
 def unknown_packet_event_handler(sender, args):
-	print 'Unknow packet received: type: 0x%04x, length: 0x%04x' % (args[0], args[1])
+	print 'Unknow packet received: type: 0x%04x, length: 0x%04x' % (args.type, args.length)
 	print
 	
 
