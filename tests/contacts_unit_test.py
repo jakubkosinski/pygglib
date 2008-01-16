@@ -157,6 +157,16 @@ class ContactsListUnitTest(unittest.TestCase):
     def testRequestString(self):
         clist = ContactsList(self.request_string)
         self.assertEqual(clist.export_request_string(), self.request_string)
+    
+    def testContainsContact(self):
+        clist = ContactsList()
+	c = Contact({"uin":1234, "shown_name":"Trol"})
+        self.assertFalse(1234 in clist)
+        self.assertFalse(c in clist)
+	clist.add_contact(c)
+        self.assertTrue(1234 in clist)
+        self.assertTrue(c in clist)
+
         
 if __name__ == "__main__":
     suite1 = unittest.makeSuite(ContactUnitTest)

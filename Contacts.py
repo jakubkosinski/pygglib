@@ -204,6 +204,25 @@ class ContactsList(list):
 	
 	def __len__(self):
 		return len(self.data)
+
+	def __contains__(self, contact):
+		"""
+		Sprawdza czy dany kontakt jest na liscie kontaktow
+		parametr:
+			* contact (typu Contact lub integer)
+		uzycie:
+			* if 3932154 in contacts_list:
+				pass
+			* c = Contact({"uin":423543, "shown_name":"Juzefina})
+			  if c in contacts_list:
+			  	pass
+		"""
+		if type(contact) == types.IntType:
+			return self[contact] != None
+		elif type(contact) == Contact:
+			return self.data.__contains__(contact)
+		else:
+			raise AssertionError
 	
 	def export_request_string(self):
 		"""
