@@ -55,7 +55,7 @@ def on_msg_ack_event_handler(sender, args):
 
 def on_notify_reply_event_handler(sender, args):
 	print '---'
-	print 'Notify from server:', len(args.contacts_list)
+	print 'Notify from server:'
 	for contact in args.contacts_list.data:
 		print contact.shown_name + ' is ' + GGStatuses.reverse_lookup_without_mask(contact.status)
 		if contact.description != "":
