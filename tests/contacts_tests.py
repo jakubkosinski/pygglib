@@ -39,9 +39,9 @@ if __name__ == "__main__":
 		session.register('on_notify_reply', notify_reply)
 		session.login()
 		time.sleep(2)
-		print "uin: %d, status: %d description: %s" % (session.contacts_list[3217426].uin, session.contacts_list[3217426].status, session.contacts_list[3217426].description)
-		print "uin: %d, status: %d description: %s" % (session.contacts_list[4102378].uin, session.contacts_list[4102378].status, session.contacts_list[4102378].description)
-		print "uin: %d, status: %d description: %s" % (session.contacts_list[3993939].uin, session.contacts_list[3993939].status, session.contacts_list[3993939].description)
+		print "uin: %d, status: %s description: %s" % (session.contacts_list[3217426].uin, GGStatuses.reverse_lookup_without_mask(session.contacts_list[3217426].status), session.contacts_list[3217426].description)
+		print "uin: %d, status: %s description: %s" % (session.contacts_list[4102378].uin, GGStatuses.reverse_lookup_without_mask(session.contacts_list[4102378].status), session.contacts_list[4102378].description)
+		print "uin: %d, status: %s description: %s" % (session.contacts_list[3993939].uin, GGStatuses.reverse_lookup_without_mask(session.contacts_list[3993939].status), session.contacts_list[3993939].description)
 		time.sleep(4)
 		session.logout()
 	finally:
