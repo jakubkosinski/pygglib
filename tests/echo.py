@@ -79,7 +79,7 @@ def on_disconnecting_event_handler(sender, args):
 	print 'Server has closed the connection'
 	
 if __name__ == "__main__":
-	contacts_list = ContactsList([Contact({'uin':3993939,'shown_name':'Cinu'}), Contact({'uin':4668758,'shown_name':'Anna'})])
+	contacts_list = ContactsList([Contact({'uin':3993939,'shown_name':'Tralala'}), Contact({'uin':4668758,'shown_name':'Anna'})])
 	# Inicjowanie sesji
 	session = GGSession(uin = 11327271, password = 'eto2007', initial_status = GGStatuses.AvailDescr, initial_description = 'pygglib echo demo', contacts_list = contacts_list)
 	# Rejestrowanie obslugi zdarzen

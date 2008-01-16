@@ -18,6 +18,7 @@ def login_ok_event_handler(sender, args):
 	print
 
 def status_notify_event_handler(sender, args):
+	print args.args()
 	print 'Numerek %d zmienil status' % args.uin
 	print
 

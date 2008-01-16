@@ -259,19 +259,19 @@ class GGStatus(GGIncomingPacket):
 		pass
 
 	def read(self, connection, size):
+		self.return_time = 0
 		if size == 8:
 			structure = struct.unpack("<II", connection.read(size))
 			self.uin = structure[0] & 0x00ffffff # TODO: to moze byc niepotrzebne
 			self.status = structure[1]
 			self.description = ""
-			self.return_time = 0
 		else:
 			structure = struct.unpack("<II%ds" % (size - 8), connection.read(size))
 			self.uin = structure[0] & 0x00ffffff
 			self.status = structure[1]
 			self.description = structure[2]
 			if len(self.description) <= 4:
-				self.return_time = 0
+				pass
 			elif ord(structure[2][-5]) == 0:
 				tuple = struct.unpack("<%dsxI" % (len(self.description) - 5), self.description)
 				self.description = tuple[0]
@@ -304,8 +304,9 @@ class GGStatus60(GGIncomingPacket):
 			self.version = structure[4]
 			self.image_size = structure[5]
 			self.description = structure[6]
+			self.return_time = 0
 			if len(self.description) <= 4:
-				self.return_time = 0
+				pass
 			elif ord(structure[6][-5]) == 0:
 				tuple = struct.unpack("<%dsxI" % (len(self.description) - 5), self.description)
 				self.description = tuple[0]
