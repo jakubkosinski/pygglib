@@ -1,0 +1,25 @@
+Klasa GGSession jest obs³ugiwana poprzez odpowiednie zdarzenia. U¿ytwkonik "doczepia" swoje funkcje obs³uguj¹ce zdarzenia.
+
+Klasa obs³uguje nastêpuj¹ce zdarzenia:
+ * on_login_ok
+     zdarzenie wystêpuje jeœli u¿ytkownikowi uda siê poprawnie zalogowaæ do sieci gadu-gadu.
+ * on_login_failed
+     zdarzenie wystêpuje jeœli u¿ytkownikowi nie uda siê poprawnie zalogowaæ do sieci gadu-gadu.
+ * on_need_email - 
+     zdarzenie wystêpuje przy logowaniu kiedy numer zosta³ zarejestrowany bez podananie adresu e-mail
+ * on_msg_recv
+     zdarzenie wystêpuje w przypadku gdy po zalogowaniu siê uzytkownik otrzyma wiadomoœæ
+ * on_unknown_packet
+     zdarzenie wystêpuje w przypadku nieznanego typu pakietu
+ * on_send_msg_ack
+     zdarzenie wystêpuje w przypadku wys³ania przez u¿ytkownika wiadomoœci
+ * on_notify_reply - 
+     zdarzenie wystêpuje w przypadku kiedy serwer zwraca informacje o kontakcie
+ * on_pubdir_recv - 
+     zdarzenie wystêpuje kiedy przychodzi pakiet bêd¹cy odpowiedzi¹ do katalogu publicznego
+ * on_userlist_reply -
+     zdarzenie wystêpuje 
+ * on_status_changed - 
+     zdarzenie wystêpuje w przypadku kiedy zalogowany u¿ytkownik zmienia status
+ * on_disconnecting - 
+     zdarzenie wystêpuje kiedy zalogowany u¿ytkownik roz³¹czy siê
