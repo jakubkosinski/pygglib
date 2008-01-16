@@ -76,7 +76,9 @@ class GGRecvMsg(GGIncomingPacket):
 		self.seq = structure[1]
 		self.time = structure[2]
 		self.msg_class = structure[3]
-		self.message = structure[4]
+		self.message = structure[4].split("\x00")[0] #czasem dziwne smici sa doklejane. Chyba tylko w najnowszej wersji GG. NIe zmienia to faktu, ze zawsze po wiadomosci
+													 #jest 0x00. Mozemy wiec odciac koncowke - obojetnie co w niej jest. TODO: co jest w tej koncowce? :?
+													 #O, to jest chyba formatowanie. Ucinamy to na razie
 
 class GGSendMsgAck(GGIncomingPacket):
 	"""
