@@ -463,7 +463,7 @@ class GGSession(EventsList):
 		for contact in contacts:
 			if contact != '' and contact != "\n":
 				newcontact = Contact({'request_string':contact})
-				self.__contacts_list.add_contact(newcontact)
+				self.add_contact(newcontact)
 				
 	def __get_logged(self):
 		return self.__logged
