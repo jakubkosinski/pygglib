@@ -1,7 +1,7 @@
 import os
 import sys
 if os.sys.platform == 'win32':
-	sys.path.append("..\\..\\src") # - dla windowsa
+	sys.path.append(".\\..") # - dla windowsa
 else:
 	sys.path.append("../") # - dla linuksa
 from pygglib import GGSession
