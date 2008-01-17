@@ -11,6 +11,7 @@ import types
 import time
 import random
 import Helpers
+from Exceptions import *
 
 class Token(object):
 	"""
@@ -60,12 +61,16 @@ class HTTPServices(object):
 		assert type(uin) == types.IntType
 		
 		url = 'http://appmsg.gadu-gadu.pl/appsvc/appmsg4.asp?fmnumber=' + str(uin) + '&version=7,7,0,3315&lastmsg=0'
-
-		request = urllib2.Request(url)
-		request.add_header('User-Agent', self.__user_agent)
 		
-		response = urllib2.urlopen(request)
-		info = response.read().split(' ')
+		try:
+			request = urllib2.Request(url)
+			request.add_header('User-Agent', self.__user_agent)
+			
+			response = urllib2.urlopen(request)
+			info = response.read().split(' ')
+		except: #wyjatki zwiazane z niemoznoscia polaczenia sie. Inne tu chyba nie powinny wystapic :)
+			raise GGServerNotOperating()
+
 		if info[2] == 'notoperating':
 			raise GGServerNotOperating('HTTPServices.get_server: Server is not operating')
 		server = info[2].split(':')[0]
@@ -78,12 +83,15 @@ class HTTPServices(object):
 		"""
 		url = 'http://register.gadu-gadu.pl/appsvc/regtoken.asp'
 		
-		request = urllib2.Request(url)
-		request.add_header('User-Agent', self.__user_agent)
+		try:
+			request = urllib2.Request(url)
+			request.add_header('User-Agent', self.__user_agent)
+			
+			response = urllib2.urlopen(request)
+			width, height, length, id, url = response.read().replace('\r\n',' ').split(' ')
+		except: #wyjatki zwiazane z niemoznoscia polaczenia sie. Inne tu chyba nie powinny wystapic :)
+			raise GGServerNotOperating()
 		
-		response = urllib2.urlopen(request)
-		info = response.read().replace('\r\n',' ').split(' ')
-		width, height, length, id, url = info
 		return Token(width, height, length, id, url + '?tokenid=' + id)
 
 	def register_account(self, pwd, email, tokenid, tokenval):
@@ -99,11 +107,15 @@ class HTTPServices(object):
 		url = 'http://register.gadu-gadu.pl/appsvc/fmregister3.asp'
 		data = urllib.urlencode({'pwd' : pwd, 'email' : email, 'tokenid' : tokenid, 'tokenval' : tokenval, 'code' : code})
 		
-		request = urllib2.Request(url, data)
-		request.add_header('User-Agent', self.__user_agent)
-		
-		response = urllib2.urlopen(request)
-		text = response.read()
+		try:
+			request = urllib2.Request(url, data)
+			request.add_header('User-Agent', self.__user_agent)
+			
+			response = urllib2.urlopen(request)
+			text = response.read()
+		except: #wyjatki zwiazane z niemoznoscia polaczenia sie. Inne tu chyba nie powinny wystapic :)
+			raise GGServerNotOperating()
+			
 		if text == 'bad_tokenval':
 			raise GGBadTokenVal('HTTPServices.register_account: Bad tokenval')
 		uin = text[text.find(':')+1:len(text)]
@@ -124,11 +136,15 @@ class HTTPServices(object):
 		url = 'http://register.gadu-gadu.pl/appsvc/fmregister3.asp'
 		data = urllib.urlencode({'fmnumber' : fmnumber, 'fmpwd' : fmpwd, 'delete' : 1, 'pwd' : pwd, 'email' : 'deleteaccount@gadu-gadu.pl', 'tokenid' : tokenid, 'tokenval' : tokenval, 'code' : code})
 		
-		request = urllib2.Request(url, data)
-		request.add_header('User-Agent', self.__user_agent)
-		
-		response = urllib2.urlopen(request)
-		text = response.read()
+		try:
+			request = urllib2.Request(url, data)
+			request.add_header('User-Agent', self.__user_agent)
+				
+			response = urllib2.urlopen(request)
+			text = response.read()
+		except: #wyjatki zwiazane z niemoznoscia polaczenia sie. Inne tu chyba nie powinny wystapic :)
+			raise GGServerNotOperating()
+			
 		if text == 'reg_success:'+str(fmnumber):
 			return True
 		else:
@@ -147,11 +163,14 @@ class HTTPServices(object):
 		url = 'http://retr.gadu-gadu.pl/appsvc/fmsendpwd3.asp'
 		data = urllib.urlencode({'userid' : userid, 'email' : email, 'tokenid' : tokenid, 'tokenval' : tokenval, 'code' : code})
 		
-		request = urllib2.Request(url, data)
-		request.add_header('User-Agent', self.__user_agent)
-		
-		response = urllib2.urlopen(request)
-		text = response.read()
+		try:
+			request = urllib2.Request(url, data)
+			request.add_header('User-Agent', self.__user_agent)
+			
+			response = urllib2.urlopen(request)
+			text = response.read()
+		except: #wyjatki zwiazane z niemoznoscia polaczenia sie. Inne tu chyba nie powinny wystapic :)
+			raise GGServerNotOperating()
 		if text == 'pwdsend_success':
 			return True
 		else:
@@ -174,12 +193,15 @@ class HTTPServices(object):
 		code = Helpers.gg_http_hash(pwd, email)
 		url = 'http://register.gadu-gadu.pl/appsvc/fmregister3.asp'
 		data = urllib.urlencode({'fmnumber' : fmnumber, 'fmpwd' : fmpwd, 'pwd' : pwd, 'email' : email, 'tokenid' : tokenid, 'tokenval' : tokenval, 'code' : code})
-		
-		request = urllib2.Request(url, data)
-		request.add_header('User-Agent', self.__user_agent)
-		
-		response = urllib2.urlopen(request)
-		text = response.read()
+		try:
+			request = urllib2.Request(url, data)
+			request.add_header('User-Agent', self.__user_agent)
+			
+			response = urllib2.urlopen(request)
+			text = response.read()
+		except: #wyjatki zwiazane z niemoznoscia polaczenia sie. Inne tu chyba nie powinny wystapic :)
+			raise GGServerNotOperating()
+			
 		if text == 'reg_success:' + str(fmnumber):
 			return True
 		else:

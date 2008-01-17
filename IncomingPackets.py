@@ -307,9 +307,9 @@ class GGStatus60(GGIncomingPacket):
 			self.image_size = structure[5]
 			self.description = structure[6]
 			self.return_time = 0
-			if len(self.description) <= 4:
-				pass
-			elif ord(structure[6][-5]) == 0:
+			#if len(self.description) <= 4:
+			#	pass
+			if ord(structure[6][-5]) == 0:
 				tuple = struct.unpack("<%dsxI" % (len(self.description) - 5), self.description)
 				self.description = tuple[0]
 				self.return_time = tuple[1]

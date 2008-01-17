@@ -51,7 +51,7 @@ class Contact(object):
 	status = GGStatuses.NotAvail
 	ip = 0
 	port = 0
-	version = None
+	version = 0 #zera sa po to, zeby sie nie odwolywac do None, jesli pola nie zostaly jeszcze wypelnione
 	image_size = 0
 	description = ""
 	return_time = 0
@@ -76,7 +76,7 @@ class Contact(object):
 				self.hidden = 0
 			else:
 				self.hidden = int(self.hidden)
-		else:
+		else: #konstruktor nie jest slownikiem z jedynym kluczem 'request_string', zawiera pola takie jak uin, surname, itp.
 			self.uin = int(params['uin'])
 			if params.has_key('name'):
 				self.name = params['name']
@@ -170,10 +170,10 @@ class ContactsList(list):
 		else:
 			raise AssertionError
 		
-		if self[c.uin] != None:
+		if self[c.uin] != None: #jest juz kontakt o takim numerku
 			x = self[c.uin]
-			self.data.remove(x)
-			self.add_contact(c)
+			self.data.remove(x) #usuwamy go wiec
+			self.add_contact(c) #.. i tworzymy nowy :]
 		else:
 			self.data.append(c)
 	
@@ -182,12 +182,18 @@ class ContactsList(list):
 		Metoda usuwajaca kontakt o numerze uin z listy. W przypadku, gdy na liscie nie ma kontaktu o podanym uin wyrzucany jest wyjatek KeyError.
 		"""
 		contact = self[uin]
-		if contact == None:
-			raise KeyValue(uin)
+		if contact == None: 
+			raise GGNotInContactsList(uin)
 		else:
 			self.data.remove(contact)
 
 	def __index_by_uin(self, uin):
+		"""
+		Znajduje miejsce w liscie kontaktow kontaktu u numerku 'uin'
+		Zwraca:
+			* miejsce w liscie kontaktow (jesli znaleziono)
+			* -1 (jesli nie znaleziono)
+		"""
 		i = 0
 		for c in self.data:
 			if int(c.uin) == int(uin):
@@ -196,6 +202,11 @@ class ContactsList(list):
 		return -1
 	
 	def __getitem__(self, uin):
+		"""
+		Zwraca:
+			* kontakt o numerze uin, jesli taki jest na liscie kontaktow
+			* None gdy nie ma takiego kontaktu na liscie
+		"""
 		index = self.__index_by_uin(uin)
 		if index == -1:
 			return None

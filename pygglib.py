@@ -56,7 +56,7 @@ class GGSession(EventsList):
 		assert type(contacts_list) == ContactsList or contacts_list == None		
 		EventsList.__init__(self, ['on_login_ok', 'on_login_failed', 'on_need_email', 'on_msg_recv', \
 				'on_unknown_packet', 'on_send_msg_ack', 'on_notify_reply', 'on_pubdir_recv', 'on_userlist_reply', \
-				'on_status_changed', 'on_disconnecting'])
+				'on_status_changed', 'on_disconnecting', 'on_server_not_operating'])
 		self.__uin = uin
 		self.__password = password
 		self.__status = initial_status
@@ -210,10 +210,21 @@ class GGSession(EventsList):
 		"""
 		Metoda loguje uzytkownika do sieci gadu-gadu. Parametry podawane sa w konstruktorze.
 		"""
+		limit = 7 #tyle pobierze nowych serwerow zanim zaprzestanie prob
+		times = 0 #ile razy juz pobieral nowy serwer
 		with self.__lock:
-			server, port = HTTPServices.get_server(self.__uin)
-			self.__connection = Connection(server, port)
-			self.__connected = True #TODO: sprawdzanie tego i timeouty
+			while not self.__connected:
+				server, port = HTTPServices.get_server(self.__uin)
+				try:
+					self.__connection = Connection(server, port)
+					self.__connected = True
+				except GGServerNotOperating:
+					times += 1
+					if times >= limit:
+						self.on_server_not_operating(self, EventArgs({}))
+						return
+					#else niech pobierze inny serwer i probuje dalej :-)
+			
 			header = GGHeader()
 			header.read(self.__connection)
 			if header.type != GGIncomingPackets.GGWelcome:
@@ -255,10 +266,11 @@ class GGSession(EventsList):
 		
 		self.change_status(description == '' and GGStatuses.NotAvail or GGStatuses.NotAvailDescr, description)
 		#with self.__lock:
+		self.__connection.disconnect()
 		self.__logged = False # przed join(), zeby zakonczyc watek
 		self.__events_thread.join()
 		self.__pinger.cancel()
-		self.__connection.disconnect()
+		#self.__connection.disconnect()
 		self.__connected = False
 	
 	def change_status(self, status, description = ""):
