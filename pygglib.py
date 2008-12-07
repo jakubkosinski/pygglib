@@ -10,9 +10,6 @@ Autorzy:
 	Marcin Krupowicz
 	Mateusz Strycharski
 """
-
-#$Id$
-
 from __future__ import with_statement
 
 from IncomingPackets import *
@@ -241,6 +238,7 @@ class GGSession(EventsList):
 				in_packet = GGLoginOK()
 				in_packet.read(self.__connection, header.length)
 				self.on_login_ok(self, EventArgs({}))
+				self.__pinger.start()
 				self.__events_thread.start() #uruchamiamy watek listenera
 				time.sleep(0.5) #TODO: potrzebne to?
 				self.__send_contacts_list()
@@ -268,6 +266,7 @@ class GGSession(EventsList):
 		#with self.__lock:
 		self.__connection.disconnect()
 		self.__logged = False # przed join(), zeby zakonczyc watek
+		self.__pinger.join()
 		self.__events_thread.join()
 		self.__pinger.cancel()
 		#self.__connection.disconnect()
