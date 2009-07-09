@@ -196,11 +196,16 @@ class GGSession(EventsList):
 		"""
 		Metoda wysyla pakiet GGPing do serwera
 		"""
+		
 		if not self.__logged:
 			raise GGNotLogged
 		with self.__lock:
 			out_packet = GGPing()
 			out_packet.send(self.__connection)
+			print '[PING]'
+			self.__pinger.cancel()
+			self.__pinger = Timer(120.0, self.__ping) # co 2 minuty pingujemy serwer
+			self.__pinger.start()
 	
 
 	def login(self):
@@ -472,7 +477,8 @@ class GGSession(EventsList):
 		if self.__contacts_list == None:
 			self.__contacts_list = ContactsList()
 		for contact in contacts:
-			if contact != '' and contact != "\n":
+			#TODO: needs to be fixed: groups
+			if contact != '' and contact != "\n" and contact != "GG70ExportString,;\r":
 				newcontact = Contact({'request_string':contact})
 				self.add_contact(newcontact)
 				
